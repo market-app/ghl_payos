@@ -1,4 +1,4 @@
-import { CLIENT_AUTH, LOYALTY_ENGINE, STRATEGY } from 'constants/loyalty-engine-portal-web';
+import { CLIENT_AUTH, LOYALTY_ENGINE, STRATEGY } from 'constants';
 import { get } from 'lodash';
 import nProgress from 'nprogress';
 import { axiosLoyaltyEngine } from 'utils/axios';

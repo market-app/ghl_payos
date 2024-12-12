@@ -1,7 +1,7 @@
 import { notification } from 'antd';
 import { getUserAccessToken } from 'auth/loyalty-engine-portal-web/loyaltyEngineAuth';
 import axios from 'axios';
-import { CLIENT_AUTH, LOYALTY_ENGINE_PORTAL_API_ENDPOINT } from 'constants/loyalty-engine-portal-web';
+import { CLIENT_AUTH, LOYALTY_ENGINE_PORTAL_API_ENDPOINT } from 'constants';
 import get from 'lodash/get';
 import router from 'next/router';
 

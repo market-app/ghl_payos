@@ -1,4 +1,3 @@
-import { pathNames } from 'constants/pathNames';
 import { routers } from 'layouts/loyalty-engine-portal-web/main';
 
 export const REDIRECT_ROUTER = routers[0].link;
@@ -11,8 +10,6 @@ export const CLIENT_AUTH = {
   LOGIN: `authentication/login`,
   VERIFY_TOKEN: `authentication/verify-token`,
 };
-
-export const publicPageLoyaltyEngineList = [`${pathNames.LOYALTY_ENGINE_PORTAL_WEB}/login`];
 
 export enum ENUM_LOYALTY_TIER_NAME {
   SILVER = 'silver',

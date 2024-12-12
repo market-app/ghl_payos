@@ -1,5 +1,5 @@
 import { Spin } from 'antd';
-import { publicPageLoyaltyEngineList } from 'constants/loyalty-engine-portal-web';
+import { publicPageLoyaltyEngineList } from 'constants';
 import router, { useRouter } from 'next/router';
 import React, { createContext, useEffect, useState } from 'react';
 import { verifyTokenMerchant } from './loyaltyEngineAuth';

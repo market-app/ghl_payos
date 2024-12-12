@@ -1,7 +1,7 @@
 import { Spin } from 'antd';
 import { LoyaltyEngineAuthUserContext } from 'auth/loyalty-engine-portal-web/authContext';
 import { verifyTokenMerchant } from 'auth/loyalty-engine-portal-web/loyaltyEngineAuth';
-import { REDIRECT_ROUTER } from 'constants/loyalty-engine-portal-web';
+import { REDIRECT_ROUTER } from 'constants';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useContext } from 'react';

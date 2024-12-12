@@ -1,7 +1,7 @@
 import { UserOutlined } from '@ant-design/icons';
 import { Button, Checkbox, Form, Input, notification } from 'antd';
 import { logIn } from 'auth/loyalty-engine-portal-web/loyaltyEngineAuth';
-import { REDIRECT_ROUTER } from 'constants/loyalty-engine-portal-web';
+import { REDIRECT_ROUTER } from 'constants';
 import get from 'lodash/get';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';

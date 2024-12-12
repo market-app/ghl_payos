@@ -1,15 +1,13 @@
 import {
+  DeploymentUnitOutlined,
   LaptopOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
-  DeploymentUnitOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
-import HeaderLayout from 'components/loyalty-engine-portal-web/HeaderLayout';
-import { pathNames } from 'constants/pathNames';
 import { useRouter } from 'next/router';
-import { createElement, ReactNode, useEffect, useState } from 'react';
+import { createElement, ReactNode, useState } from 'react';
 import { IRoutes, renderMenuByRoutes } from './routes';
 
 export const routers: Array<IRoutes> = [
@@ -45,19 +43,7 @@ function LoyaltyEngineLayout({ children }: { children: ReactNode }) {
     setCollapsed(!collapsed);
     window.localStorage.setItem('collapsed', `${!collapsed}`);
   };
-  useEffect(() => {
-    // xử lý active cho sub menu
-    const paths = router.pathname.split(pathNames.LOYALTY_ENGINE_PORTAL_WEB);
-    const path = paths.length > 0 ? paths[paths.length - 1] : '';
-    setPath(path);
-    if (router.isReady) {
-      setShowChild(true);
-    }
-  }, [router]);
-  if (!showChild) {
-    // You can show some kind of placeholder UI here
-    return null;
-  }
+
   return (
     <Layout
       style={{
@@ -67,7 +53,6 @@ function LoyaltyEngineLayout({ children }: { children: ReactNode }) {
         minWidth: 1200,
       }}
     >
-      <HeaderLayout />
       <Layout.Content>
         <Layout className='site-layout-background' style={{ height: '100%' }}>
           <Layout.Sider
