@@ -1,0 +1,18 @@
+{
+  "name": "ghl-payos",
+  "private": true,
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  },
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "bootstrap-production": "lerna bootstrap -- --production --no-optional",
+    "all-dev": "lerna run --stream dev",
+    "api": "lerna run --stream --scope api dev",
+    "web": "lerna run --stream --scope web dev",
+    "build-api": "lerna run --stream --scope api build",
+    "build-web": "lerna run --stream --scope web build",
+    "build-all-dev": "lerna run --stream compile && lerna run --stream build"
+  },
+  "dependencies": {}
+}

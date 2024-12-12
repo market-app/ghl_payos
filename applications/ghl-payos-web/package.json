@@ -1,0 +1,48 @@
+{
+  "name": "web",
+  "version": "4.85.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "NODE_ENV=production node index.js",
+    "lint": "next lint",
+    "type-check": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/modifiers": "^7.0.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@feathersjs/authentication-client": "4.5.17",
+    "@feathersjs/feathers": "4.5.17",
+    "@feathersjs/rest-client": "4.5.17",
+    "antd": "5.17.0",
+    "axios": "^1.7.2",
+    "chart.js": "3.9.1",
+    "dayjs": "1.11.11",
+    "html-react-parser": "3.0.16",
+    "i18next": "^23.11.5",
+    "lodash": "^4.17.21",
+    "next": "13.1.1",
+    "nprogress": "^0.2.0",
+    "numeral": "2.0.6",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-i18next": "^14.1.2",
+    "react-quill": "2.0.0",
+    "swr": "^2.2.5",
+    "zustand": "4.5.2"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.4",
+    "@types/node": "20.12.12",
+    "@types/nprogress": "^0.2.0",
+    "@types/numeral": "^2.0.5",
+    "@types/react": "^18.3.3",
+    "eslint": "8.30.0",
+    "eslint-config-next": "13.1.1",
+    "eslint-config-prettier": "^8.8.0",
+    "prettier": "^2.8.6",
+    "typescript": "4.7.4"
+  }
+}

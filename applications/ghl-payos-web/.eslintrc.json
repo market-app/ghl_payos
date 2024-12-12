@@ -1,0 +1,9 @@
+{
+  "extends": ["next", "next/core-web-vitals", "prettier", "eslint:recommended"],
+  "rules": {
+    "react/no-unescaped-entities": "off",
+    "react/display-name": "off",
+    "no-unused-vars": "warn",
+    "react-hooks/exhaustive-deps": "off"
+  }
+}
