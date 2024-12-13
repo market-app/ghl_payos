@@ -2234,6 +2234,11 @@ path-type@^4.0.0:
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
 
+payos-checkout@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/payos-checkout/-/payos-checkout-1.0.9.tgz#98a9fdc4bac812df678afd2f7f3299a106f5c335"
+  integrity sha512-5QEc169pMh9ZIC2yqe+uVdBAr6OokYUKqAQH/y2q7waOnvKEfmDBEpLAc2+pW1x6YVXqAU20xPFx+EDE8bQo3g==
+
 picocolors@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.1.1.tgz#3d321af3eab939b083c8f929a1d12cda81c26b6b"
