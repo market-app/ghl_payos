@@ -3,9 +3,8 @@ import { BaseExceptionFilter } from '@nestjs/core';
 import get from 'lodash/get';
 import omit from 'lodash/omit';
 import set from 'lodash/set';
-
+import { TraceService } from './opentelemetry/trace/trace.service';
 import { parseErrorToJson } from './shared/utils/handle-error';
-
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
   constructor(private readonly traceService: TraceService) {

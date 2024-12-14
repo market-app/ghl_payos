@@ -1,5 +1,3 @@
-import { NestFactory } from '@nestjs/core';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import {
   Logger,
   RequestMethod,
@@ -7,13 +5,13 @@ import {
   VersioningType,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
-import * as sentry from '@sentry/node';
-import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GracefulShutdown } from './graceful-shutdown';
-import cookieParser from 'cookie-parser';
-import compression from 'compression';
-import helmet from 'helmet';
 
 async function bootstrap(): Promise<void> {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -41,8 +39,6 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const configService = app.get(ConfigService);
-
   app.setGlobalPrefix('/api', {
     exclude: [
       { path: 'health/liveness', method: RequestMethod.GET },
@@ -56,10 +52,6 @@ async function bootstrap(): Promise<void> {
     type: VersioningType.URI,
     defaultVersion: VERSION_NEUTRAL,
   });
-
-  if (isProduction) {
-    sentry.init({ dsn: configService.get('SENTRY_DSN'), normalizeDepth: 10 });
-  }
 
   const server = app.getHttpServer();
   const gracefulShutdown = app.get(GracefulShutdown);
