@@ -54,6 +54,14 @@ export class AppsEntity {
   userType: string;
 
   @Column({
+    name: 'email',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
+  email: string;
+
+  @Column({
     name: 'user_id',
     type: 'varchar',
     length: 100,

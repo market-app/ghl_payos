@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { GetAccessTokenResponseDTO } from './dto/get-access-token-response.dto';
 
 @Injectable()
-export class GiHighLevelService {
+export class GoHighLevelService {
   constructor(
     private configService: ConfigService,
 
@@ -165,15 +165,11 @@ export class GiHighLevelService {
     accessToken,
     testMode,
     liveMode,
-    refreshToken,
-    creationTime,
   }: {
     locationId: string;
     accessToken: string;
-    testMode: Record<string, any>;
-    liveMode: Record<string, any>;
-    refreshToken: string;
-    creationTime: string;
+    testMode: string;
+    liveMode: string;
   }): Promise<any> {
     try {
       const response = await ghlApi({ log: this.historyRequestsRepository })(
@@ -184,8 +180,6 @@ export class GiHighLevelService {
             'Content-Type': 'application/x-www-form-urlencoded',
             Authorization: `Bearer ${accessToken}`,
             Version: process.env.GHL_VERSION || '',
-            'x-refresh-token': refreshToken,
-            'x-creation-time': creationTime,
           },
           params: {
             locationId,

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PPayOS_DB } from 'src/config';
 import { ENUM_PAYOS_APP_STATE } from 'src/shared/constants/payos.constant';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
-import { GiHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
+import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
 import { Repository } from 'typeorm';
 import { GoHighLevelPayOSAuthenticationService } from './auth.service';
 
@@ -12,7 +12,7 @@ export class GoHighLevelPayOSAuthenticationController {
   constructor(
     private readonly authService: GoHighLevelPayOSAuthenticationService,
 
-    private readonly ghlService: GiHighLevelService,
+    private readonly ghlService: GoHighLevelService,
 
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
