@@ -17,6 +17,7 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import config, { PPayOS_DB } from './config';
 import { GracefulShutdown } from './graceful-shutdown';
+import { GoHighLevelPayOSAuthenticationModule } from './modules/gohighlevel-payos/auth/auth.module';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -48,6 +49,7 @@ axios.defaults.timeout = 60000;
       ttl: 60,
       limit: 500,
     }),
+    GoHighLevelPayOSAuthenticationModule,
   ],
   exports: [],
   providers: [GracefulShutdown],
@@ -57,5 +59,7 @@ export class AppModule implements OnApplicationShutdown, NestModule {
     console.log('Shutdown');
   }
 
-  configure(consumer: MiddlewareConsumer): void {}
+  configure(consumer: MiddlewareConsumer): void {
+    console.log('run repo');
+  }
 }

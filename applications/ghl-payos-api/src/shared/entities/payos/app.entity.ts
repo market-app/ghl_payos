@@ -1,7 +1,4 @@
-import {
-  ENUM_LOYALTY_TIER_RECALCULATION_CONFIG,
-  ENUM_LOYALTY_TIER_STATUS,
-} from 'src/shared/constants/loyalty-engine.constant';
+import { ENUM_PAYOS_APP_STATE } from 'src/shared/constants/payos.constant';
 import {
   Column,
   CreateDateColumn,
@@ -10,8 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'tiers' })
-export class TiersEntity {
+@Entity({ name: 'apps' })
+export class AppsEntity {
   @Column({
     type: 'integer',
     nullable: false,
@@ -21,59 +18,71 @@ export class TiersEntity {
   id: number;
 
   @Column({
-    type: 'uuid',
+    name: 'access_token',
+    type: 'text',
     nullable: false,
-    unique: true,
-    default: 'uuid_generate_v1mc()',
   })
-  uuid: string;
+  accessToken: string;
 
   @Column({
-    name: 'client_id',
+    name: 'refresh_token',
+    type: 'text',
+    nullable: false,
+  })
+  refreshToken: string;
+
+  @Column({
+    name: 'scope',
+    type: 'text',
+    nullable: false,
+  })
+  scope: string;
+
+  @Column({
+    name: 'expires_in',
     type: 'integer',
     nullable: false,
   })
-  clientId: number;
+  expiresIn: number;
 
   @Column({
-    name: 'name',
+    name: 'user_type',
     type: 'varchar',
-    length: 255,
-    nullable: true,
+    length: 40,
+    nullable: false,
   })
-  name: string;
+  userType: string;
 
   @Column({
-    name: 'alias',
+    name: 'user_id',
     type: 'varchar',
+    length: 100,
+    nullable: false,
   })
-  alias: string;
+  userId: string;
 
   @Column({
-    name: 'description',
+    name: 'company_id',
     type: 'varchar',
-    length: 255,
-    nullable: true,
+    length: 40,
+    nullable: false,
   })
-  description: string;
+  companyId: string;
 
   @Column({
-    name: 'status',
+    name: 'location_id',
+    type: 'varchar',
+    length: 40,
+    nullable: false,
+  })
+  locationId: string;
+
+  @Column({
+    name: 'state',
     type: 'enum',
-    enum: ENUM_LOYALTY_TIER_STATUS,
+    enum: ENUM_PAYOS_APP_STATE,
   })
-  status:
-    | ENUM_LOYALTY_TIER_STATUS.ACTIVATED
-    | ENUM_LOYALTY_TIER_STATUS.DEACTIVATED;
-
-  @Column({
-    name: 'recalculation_config',
-    type: 'enum',
-    enum: ENUM_LOYALTY_TIER_RECALCULATION_CONFIG,
-  })
-  recalculationConfig:
-    | ENUM_LOYALTY_TIER_RECALCULATION_CONFIG.AUTOMATIC
-    | ENUM_LOYALTY_TIER_RECALCULATION_CONFIG.RESET;
+  state: ENUM_PAYOS_APP_STATE.INSTALLED | ENUM_PAYOS_APP_STATE.UNINSTALLED;
 
   @Column({
     type: 'jsonb',
@@ -121,11 +130,4 @@ export class TiersEntity {
     nullable: true,
   })
   deletedBy: string;
-
-  @Column({
-    name: 'index',
-    type: 'integer',
-    nullable: false,
-  })
-  index: number;
 }

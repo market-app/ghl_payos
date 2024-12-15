@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
-import { LoyaltyEngineAuthController } from './auth.controller';
-import { LoyaltyEngineAuthService } from './auth.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PPayOS_DB } from 'src/config';
+import { AppsEntity } from 'src/shared/entities/payos/app.entity';
+import { HistoryRequestsEntity } from 'src/shared/entities/payos/histoty-request.entity';
+import { GiHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
+import { GoHighLevelPayOSAuthenticationController } from './auth.controller';
+import { GoHighLevelPayOSAuthenticationService } from './auth.service';
 
 @Module({
-  imports: [],
-  controllers: [LoyaltyEngineAuthController],
-  providers: [LoyaltyEngineAuthService],
-  exports: [LoyaltyEngineAuthService],
+  imports: [
+    TypeOrmModule.forFeature([AppsEntity, HistoryRequestsEntity], PPayOS_DB),
+  ],
+  controllers: [GoHighLevelPayOSAuthenticationController],
+  providers: [GoHighLevelPayOSAuthenticationService, GiHighLevelService],
+  exports: [GoHighLevelPayOSAuthenticationService],
 })
-export class LoyaltyEngineAuthModule {}
+export class GoHighLevelPayOSAuthenticationModule {}
