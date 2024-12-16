@@ -1,5 +1,5 @@
 import { Button, Divider, Form, Input, notification, Typography } from 'antd';
-import { updatePaymentGatewayKeys } from 'apis';
+import { getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
 import { get } from 'lodash';
 import { useEffect, useState } from 'react';
 import { IPayOSPaymentGatewayKey } from 'types';
@@ -7,10 +7,10 @@ import { IPayOSPaymentGatewayKey } from 'types';
 const PayOSConfig = () => {
   const [form] = Form.useForm<IPayOSPaymentGatewayKey>();
   const [payload, setPayload] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   const onSubmit = () => {
-    setLoading(true);
+    setLoadingSubmit(true);
     form
       .validateFields()
       .then((values) => {
@@ -26,29 +26,12 @@ const PayOSConfig = () => {
             });
           })
           .finally(() => {
-            setLoading(false);
+            setLoadingSubmit(false);
           });
       })
       .catch(() => {
-        setLoading(false);
+        setLoadingSubmit(false);
       });
-  };
-  const getInfoAppKey = async (locationId: string, companyId: string) => {
-    try {
-      const data = await fetch(`api/provider-config?locationId=${locationId}&companyId=${companyId}`, {
-        method: 'get',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then(async (response) => {
-        const jsonData = await response.json();
-        if (response.ok) return jsonData;
-
-        return Promise.reject(jsonData);
-      });
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   /**
@@ -57,9 +40,17 @@ const PayOSConfig = () => {
   const handleMessage = async ({ data }: MessageEvent) => {
     if (data.message === 'REQUEST_USER_DATA_RESPONSE') {
       window.removeEventListener('message', handleMessage);
-
-      console.log(data);
       setPayload(get(data, 'payload'));
+
+      getPaymentGatewayKeys(get(data, 'payload'))
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((error) => {
+          notification.error({
+            message: get(error, 'response.data.message', `${error}`),
+          });
+        });
     }
   };
   useEffect(() => {
@@ -93,7 +84,7 @@ const PayOSConfig = () => {
         <Divider />
         <br />
         <div className='flex justify-end'>
-          <Button type='primary' onClick={onSubmit} loading={loading}>
+          <Button type='primary' onClick={onSubmit} loading={loadingSubmit}>
             Tiến hành liên kết với payOS
           </Button>
         </div>

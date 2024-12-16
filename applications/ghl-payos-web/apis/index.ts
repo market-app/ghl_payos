@@ -10,3 +10,12 @@ export const updatePaymentGatewayKeys = (keys: IPayOSPaymentGatewayKey, payload:
     },
   });
 };
+
+export const getPaymentGatewayKeys = (payload: string) => {
+  return axiosPayOS()('/api/payos/apps/payment-gateway', {
+    method: 'get',
+    headers: {
+      'x-sso-payload': payload,
+    },
+  });
+};

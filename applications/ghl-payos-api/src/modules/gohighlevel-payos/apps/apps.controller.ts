@@ -70,8 +70,42 @@ export class GoHighLevelPayOSAppsController {
       testMode: encryptKeys,
       liveMode: encryptKeys,
       accessToken: app.accessToken,
+      latestUpdateToken: app.latestUpdateToken,
+      expireIn: app.expiresIn,
     });
 
     return true;
+  }
+
+  @UseGuards(DecryptPayloadSSOKeyGuard)
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
+  @Get('/payment-gateway')
+  async getPaymentGatewayInfo(
+    @RequestAppInfo() appInfo: AppInfoDTO,
+  ): Promise<any> {
+    const app = await this.appsRepository.findOne({
+      where: {
+        locationId: appInfo.activeLocation,
+        companyId: appInfo.companyId,
+        userId: appInfo.userId,
+      },
+    });
+    if (!app) {
+      throw new BadRequestException('Không tìm thấy app');
+    }
+    const providerConfig = await this.ghlService.getProviderConfig({
+      locationId: appInfo.activeLocation,
+      accessToken: app.accessToken,
+      latestUpdateToken: app.latestUpdateToken,
+      expireIn: app.expiresIn,
+    });
+    console.log({ providerConfig });
+
+    return 123;
   }
 }

@@ -2,9 +2,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import dayjs from 'dayjs';
+import { get } from 'lodash';
 import { PPayOS_DB } from 'src/config';
-import { ENUM_GHL_GRANT_TYPE } from 'src/shared/constants/payos.constant';
+import {
+  ENUM_GHL_GRANT_TYPE,
+  TIMEZONE,
+} from 'src/shared/constants/payos.constant';
+import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { HistoryRequestsEntity } from 'src/shared/entities/payos/histoty-request.entity';
+import { isTokenExpired } from 'src/shared/utils';
 import { ghlApi } from 'src/shared/utils/axios';
 import { Repository } from 'typeorm';
 import { GetAccessTokenResponseDTO } from './dto/get-access-token-response.dto';
@@ -16,6 +22,9 @@ export class GoHighLevelService {
 
     @InjectRepository(HistoryRequestsEntity, PPayOS_DB)
     private historyRequestsRepository: Repository<HistoryRequestsEntity>,
+
+    @InjectRepository(AppsEntity, PPayOS_DB)
+    private appsRepository: Repository<AppsEntity>,
   ) {}
 
   async getAccessToken(code: string): Promise<GetAccessTokenResponseDTO> {
@@ -44,8 +53,14 @@ export class GoHighLevelService {
     }
   }
 
-  async getNewToken(refreshToken: string): Promise<any> {
+  async getNewToken(refreshToken: string): Promise<GetAccessTokenResponseDTO> {
     try {
+      const body = {
+        refresh_token: refreshToken,
+        client_id: process.env.GHL_CLIENT_ID || '',
+        client_secret: process.env.GHL_CLIENT_SECRET || '',
+        grant_type: ENUM_GHL_GRANT_TYPE.REFRESH_TOKEN,
+      };
       const response = await ghlApi({ log: this.historyRequestsRepository })(
         '/oauth/token',
         {
@@ -53,12 +68,7 @@ export class GoHighLevelService {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          data: {
-            refresh_token: refreshToken,
-            client_id: process.env.GHL_CLIENT_ID,
-            client_secret: process.env.GHL_CLIENT_SECRET,
-            grant_type: ENUM_GHL_GRANT_TYPE.REFRESH_TOKEN,
-          },
+          data: new URLSearchParams(body).toString(),
         },
       ).then((res) => res.data);
 
@@ -165,20 +175,33 @@ export class GoHighLevelService {
     accessToken,
     testMode,
     liveMode,
+    expireIn,
+    latestUpdateToken,
   }: {
+    expireIn: number;
+    latestUpdateToken: Date;
     locationId: string;
     accessToken: string;
     testMode: string;
     liveMode: string;
   }): Promise<any> {
+    let newAccessToken = accessToken;
     try {
+      const isExpired = isTokenExpired(latestUpdateToken, expireIn);
+      if (isExpired) {
+        newAccessToken = await this.handleUpdateAccessToken({
+          locationId,
+          accessToken,
+        });
+      }
+
       const response = await ghlApi({ log: this.historyRequestsRepository })(
         '/payments/custom-provider/connect',
         {
           method: 'post',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${newAccessToken}`,
             Version: process.env.GHL_VERSION || '',
           },
           params: {
@@ -199,25 +222,32 @@ export class GoHighLevelService {
   async getProviderConfig({
     locationId,
     accessToken,
-    refreshToken,
-    creationTime,
+    expireIn,
+    latestUpdateToken,
   }: {
     locationId: string;
     accessToken: string;
-    refreshToken: string;
-    creationTime: string;
+    expireIn: number;
+    latestUpdateToken: Date;
   }): Promise<any> {
+    let newAccessToken = accessToken;
     try {
+      const isExpired = isTokenExpired(latestUpdateToken, expireIn);
+      if (isExpired) {
+        newAccessToken = await this.handleUpdateAccessToken({
+          locationId,
+          accessToken,
+        });
+      }
+
       const response = await ghlApi({ log: this.historyRequestsRepository })(
         '/payments/custom-provider/connect',
         {
           method: 'get',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${newAccessToken}`,
             Version: process.env.GHL_VERSION || '',
-            'x-refresh-token': refreshToken,
-            'x-creation-time': creationTime,
           },
           params: {
             locationId,
@@ -228,5 +258,34 @@ export class GoHighLevelService {
     } catch (error) {
       throw new BadRequestException(error);
     }
+  }
+
+  async handleUpdateAccessToken({
+    locationId,
+    accessToken,
+  }: {
+    locationId: string;
+    accessToken: string;
+  }): Promise<string> {
+    const app = await this.appsRepository.findOne({
+      where: {
+        accessToken,
+        locationId,
+      },
+    });
+    if (!app) {
+      throw new BadRequestException('App not found');
+    }
+    const newInfoToken = await this.getNewToken(app.refreshToken);
+    await this.appsRepository.update(
+      {
+        id: app.id,
+      },
+      {
+        accessToken: newInfoToken.access_token,
+        createdAt: new Date(),
+      },
+    );
+    return newInfoToken.access_token;
   }
 }

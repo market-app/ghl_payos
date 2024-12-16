@@ -85,6 +85,12 @@ export class AppsEntity {
   })
   locationId: string;
 
+  @CreateDateColumn({
+    name: 'latest_update_token',
+    type: 'timestamptz',
+  })
+  latestUpdateToken: Date;
+
   @Column({
     name: 'state',
     type: 'enum',

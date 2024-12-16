@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PPayOS_DB } from 'src/config';
 import { ENUM_PAYOS_APP_STATE } from 'src/shared/constants/payos.constant';
@@ -24,27 +24,39 @@ export class GoHighLevelPayOSAuthenticationController {
       return 'Missing code';
     }
     try {
-      const infoAccessToken = await this.ghlService.getAccessToken(code);
+      const infoApp = await this.ghlService.getAccessToken(code);
+
+      const app = await this.appsRepository.findOne({
+        where: {
+          locationId: infoApp.locationId,
+          userId: infoApp.userId,
+          companyId: infoApp.companyId,
+        },
+      });
+      if (app) {
+        return 'App đã tồn tại, vui lòng liên hệ quản trị viên để hỗ trợ';
+      }
 
       await this.appsRepository.save({
-        accessToken: infoAccessToken.access_token,
-        tokenType: infoAccessToken.token_type,
-        expiresIn: infoAccessToken.expires_in,
-        refreshToken: infoAccessToken.refresh_token,
-        scope: infoAccessToken.scope,
-        userType: infoAccessToken.userType,
-        companyId: infoAccessToken.companyId,
-        locationId: infoAccessToken.locationId,
-        userId: infoAccessToken.userId,
+        accessToken: infoApp.access_token,
+        tokenType: infoApp.token_type,
+        expiresIn: infoApp.expires_in,
+        refreshToken: infoApp.refresh_token,
+        scope: infoApp.scope,
+        userType: infoApp.userType,
+        companyId: infoApp.companyId,
+        locationId: infoApp.locationId,
+        userId: infoApp.userId,
         createdAt: new Date(),
+        latest_update_token: new Date(),
         createdBy: 'system',
         state: ENUM_PAYOS_APP_STATE.INSTALLED,
       });
 
       // create new integration
       await this.ghlService.createNewIntegration({
-        locationId: infoAccessToken.locationId,
-        accessToken: infoAccessToken.access_token,
+        locationId: infoApp.locationId,
+        accessToken: infoApp.access_token,
       });
 
       return 'Xác thực thành công, bạn có thể tắt tab này và tiếp tục sử dụng.';
