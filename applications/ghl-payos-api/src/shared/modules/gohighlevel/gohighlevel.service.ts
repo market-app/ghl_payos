@@ -6,7 +6,7 @@ import { get } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import {
   ENUM_GHL_GRANT_TYPE,
-  TIMEZONE,
+  ENUM_PROVIDER_CONFIG_KEY,
 } from 'src/shared/constants/payos.constant';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { HistoryRequestsEntity } from 'src/shared/entities/payos/histoty-request.entity';
@@ -14,6 +14,7 @@ import { isTokenExpired } from 'src/shared/utils';
 import { ghlApi } from 'src/shared/utils/axios';
 import { Repository } from 'typeorm';
 import { GetAccessTokenResponseDTO } from './dto/get-access-token-response.dto';
+import { GetProviderConfigResponseDTO } from './dto/get-provider-config-response.dto';
 
 @Injectable()
 export class GoHighLevelService {
@@ -78,18 +79,33 @@ export class GoHighLevelService {
     }
   }
 
-  async disconnectExistingIntegration(
-    accessToken: string,
-    locationId: string,
-  ): Promise<any> {
+  async disconnectExistingIntegration({
+    accessToken,
+    latestUpdateToken,
+    locationId,
+    expireIn,
+  }: {
+    accessToken: string;
+    locationId: string;
+    expireIn: number;
+    latestUpdateToken: Date;
+  }): Promise<any> {
+    let newAccessToken = accessToken;
     try {
+      const isExpired = isTokenExpired(latestUpdateToken, expireIn);
+      if (isExpired) {
+        newAccessToken = await this.handleUpdateAccessToken({
+          locationId,
+          accessToken,
+        });
+      }
       const response = await ghlApi({ log: this.historyRequestsRepository })(
         '/payments/custom-provider/disconnect',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${newAccessToken}`,
             Version: process.env.GHL_VERSION || '',
           },
           params: {
@@ -107,18 +123,33 @@ export class GoHighLevelService {
     }
   }
 
-  async deleteExistingIntegration(
-    accessToken: string,
-    locationId: string,
-  ): Promise<any> {
+  async deleteExistingIntegration({
+    accessToken,
+    latestUpdateToken,
+    locationId,
+    expireIn,
+  }: {
+    accessToken: string;
+    locationId: string;
+    expireIn: number;
+    latestUpdateToken: Date;
+  }): Promise<any> {
+    let newAccessToken = accessToken;
     try {
+      const isExpired = isTokenExpired(latestUpdateToken, expireIn);
+      if (isExpired) {
+        newAccessToken = await this.handleUpdateAccessToken({
+          locationId,
+          accessToken,
+        });
+      }
       const response = await ghlApi({ log: this.historyRequestsRepository })(
         '/payments/custom-provider/provider',
         {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${newAccessToken}`,
             Version: process.env.GHL_VERSION || '',
           },
           params: {
@@ -173,17 +204,15 @@ export class GoHighLevelService {
   async createProviderConfig({
     locationId,
     accessToken,
-    testMode,
-    liveMode,
     expireIn,
     latestUpdateToken,
+    apiKey,
   }: {
     expireIn: number;
     latestUpdateToken: Date;
     locationId: string;
     accessToken: string;
-    testMode: string;
-    liveMode: string;
+    apiKey: string;
   }): Promise<any> {
     let newAccessToken = accessToken;
     try {
@@ -200,17 +229,23 @@ export class GoHighLevelService {
         {
           method: 'post',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${newAccessToken}`,
             Version: process.env.GHL_VERSION || '',
           },
           params: {
             locationId,
           },
-          data: {
-            live: liveMode,
-            test: testMode,
-          },
+          data: JSON.stringify({
+            live: {
+              [ENUM_PROVIDER_CONFIG_KEY.API_KEY]: apiKey,
+              [ENUM_PROVIDER_CONFIG_KEY.PUBLISHABLE_KEY]: 'none',
+            },
+            test: {
+              [ENUM_PROVIDER_CONFIG_KEY.API_KEY]: apiKey,
+              [ENUM_PROVIDER_CONFIG_KEY.PUBLISHABLE_KEY]: 'none',
+            },
+          }),
         },
       ).then((res) => res.data);
       return response;
@@ -229,7 +264,7 @@ export class GoHighLevelService {
     accessToken: string;
     expireIn: number;
     latestUpdateToken: Date;
-  }): Promise<any> {
+  }): Promise<GetProviderConfigResponseDTO> {
     let newAccessToken = accessToken;
     try {
       const isExpired = isTokenExpired(latestUpdateToken, expireIn);

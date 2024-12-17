@@ -431,7 +431,8 @@ input[type='number'] {
 
 .loading-page {
   z-index: 999;
-  background-color: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.5); /* Màu nền mờ */
+  backdrop-filter: blur(5px); /* Hiệu ứng mờ */
   position: absolute;
   top: 0;
   left: 0;

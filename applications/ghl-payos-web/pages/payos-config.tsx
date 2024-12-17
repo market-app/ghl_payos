@@ -1,5 +1,6 @@
 import { Button, Divider, Form, Input, notification, Typography } from 'antd';
 import { getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
+import LoadingPage from 'components/LoadingPage';
 import { get } from 'lodash';
 import { useEffect, useState } from 'react';
 import { IPayOSPaymentGatewayKey } from 'types';
@@ -8,6 +9,7 @@ const PayOSConfig = () => {
   const [form] = Form.useForm<IPayOSPaymentGatewayKey>();
   const [payload, setPayload] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = () => {
     setLoadingSubmit(true);
@@ -42,14 +44,18 @@ const PayOSConfig = () => {
       window.removeEventListener('message', handleMessage);
       setPayload(get(data, 'payload'));
 
+      setLoading(true);
       getPaymentGatewayKeys(get(data, 'payload'))
         .then((res) => {
-          console.log(res);
+          form.setFieldsValue(res as any);
         })
         .catch((error) => {
           notification.error({
             message: get(error, 'response.data.message', `${error}`),
           });
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   };
@@ -61,6 +67,10 @@ const PayOSConfig = () => {
       window.removeEventListener('message', handleMessage);
     };
   }, []);
+
+  if (loading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div>
