@@ -37,6 +37,7 @@
     "@opentelemetry/api": "^1.7.0",
     "@opentelemetry/auto-instrumentations-node": "^0.40.2",
     "@opentelemetry/exporter-prometheus": "^0.45.1",
+    "@payos/node": "^1.0.10",
     "@sentry/node": "^6.16.1",
     "axios": "^0.24.0",
     "class-transformer": "0.4.0",

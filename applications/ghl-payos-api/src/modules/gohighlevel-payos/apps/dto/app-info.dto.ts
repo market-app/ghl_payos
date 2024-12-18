@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AppInfoDTO {
   @IsString()
@@ -10,18 +10,21 @@ export class AppInfoDTO {
   companyId: string;
 
   @IsString()
-  @IsNotEmpty()
-  role: string;
-
-  @IsString()
-  type: string;
-
-  @IsString()
   activeLocation: string;
 
   @IsString()
-  userName: string;
+  @IsOptional()
+  role?: string;
 
   @IsString()
-  email: string;
+  @IsOptional()
+  type?: string;
+
+  @IsString()
+  @IsOptional()
+  userName?: string;
+
+  @IsString()
+  @IsOptional()
+  email?: string;
 }

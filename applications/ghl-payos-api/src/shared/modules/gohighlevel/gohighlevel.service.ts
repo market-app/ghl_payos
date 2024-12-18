@@ -188,8 +188,8 @@ export class GoHighLevelService {
               'DD/MM/YYYY HH:mm:ss',
             )})`,
             description: 'Tích hợp thanh toán tự động với payOS',
-            paymentsUrl: `${process.env.API_HOST}/api/payos/checkout`,
-            queryUrl: `${process.env.API_HOST}/api/payos/verify-payment`,
+            paymentsUrl: `${process.env.WEB_HOST}/checkout`,
+            queryUrl: `${process.env.API_HOST}/api/payos/apps/verify-payment`,
             imageUrl:
               'https://res.cloudinary.com/da64inklg/image/upload/v1734239461/IMG_4248_onu5mm.jpg',
           }).toString(),

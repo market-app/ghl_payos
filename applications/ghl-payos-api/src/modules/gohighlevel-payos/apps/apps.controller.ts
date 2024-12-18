@@ -13,7 +13,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { get } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import {
+  ENUM_PAYOS_PAYMENT_STATUS,
   ENUM_PROVIDER_CONFIG_KEY,
+  ENUM_VERIFY_PAYMENT_TYPE,
   ENUM_WEBHOOK_TYPE,
   ERROR_MESSAGE_DEFAULT,
 } from 'src/shared/constants/payos.constant';
@@ -32,6 +34,10 @@ import { Repository } from 'typeorm';
 import { AppInfoDTO } from './dto/app-info.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { plainToClass } from 'class-transformer';
+import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
+import PayOS from '@payos/node';
+import dayjs from 'dayjs';
+import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 
 @Controller('/payos/apps')
 export class GoHighLevelPayOSAppsController {
@@ -138,6 +144,51 @@ export class GoHighLevelPayOSAppsController {
     );
   }
 
+  @Post('payment-link')
+  async createPaymentLink(
+    @Body() body: CreatePaymentLinkRequestDTO,
+  ): Promise<string> {
+    const { amount, transactionId, locationId, redirectUri } = body;
+    const app = await this.appsRepository.findOne({
+      where: {
+        locationId,
+      },
+    });
+    if (!app) {
+      throw new BadRequestException('App not found');
+    }
+    try {
+      const providerConfig = await this.getPaymentGatewayKeys({
+        activeLocation: app.locationId,
+        userId: app.userId,
+        companyId: app.companyId,
+      });
+      const { apiKey, checksumKey, clientId } = providerConfig;
+      if (!apiKey) {
+        throw new BadRequestException(
+          'Không tìm thấy thông tin cổng thanh toán',
+        );
+      }
+      const payOS = new PayOS(
+        clientId,
+        apiKey,
+        checksumKey,
+        process.env.PAYOS_PARTNER_CODE,
+      );
+      const paymentLink = await payOS.createPaymentLink({
+        orderCode: dayjs().unix(),
+        amount,
+        description: transactionId || 'Thanh toan don hang',
+        cancelUrl: redirectUri,
+        returnUrl: redirectUri,
+      });
+      return paymentLink.checkoutUrl;
+    } catch (error) {
+      const errMessage = get(error, 'message', ERROR_MESSAGE_DEFAULT);
+      throw new BadRequestException(errMessage);
+    }
+  }
+
   @Post('webhook')
   async receiveWebhook(@Body() body: Record<string, any>): Promise<any> {
     const type = get(body, 'type');
@@ -180,8 +231,8 @@ export class GoHighLevelPayOSAppsController {
     };
     let errMessage;
     try {
-      await this.ghlService.disconnectExistingIntegration(bodyRequest);
       await this.ghlService.deleteExistingIntegration(bodyRequest);
+      await this.ghlService.disconnectExistingIntegration(bodyRequest);
     } catch (err) {
       errMessage = get(err, 'response.message', ERROR_MESSAGE_DEFAULT);
     }
@@ -202,5 +253,39 @@ export class GoHighLevelPayOSAppsController {
     return {
       success: true,
     };
+  }
+
+  @Post('verify-payment')
+  async verifyPayment(@Body() body: VerifyPaymentRequestDTO): Promise<any> {
+    console.log(body);
+    const { apiKey, chargeId, type } = body;
+    await this.webhookLogsRepository.save({
+      body,
+      createdAt: new Date(),
+      createdBy: 'ghl-system',
+    });
+    const decryptKeys = decrypt(apiKey);
+    if (type !== ENUM_VERIFY_PAYMENT_TYPE.VERIFY || !decryptKeys) {
+      return 'Không handle case này';
+    }
+    const paymentGatewayKeys = formatKeysToDecrypt(decryptKeys);
+    const payOS = new PayOS(
+      get(paymentGatewayKeys, 'clientId'),
+      get(paymentGatewayKeys, 'apiKey'),
+      get(paymentGatewayKeys, 'checksumKey'),
+      process.env.PAYOS_PARTNER_CODE,
+    );
+    try {
+      const paymentInfo = await payOS.getPaymentLinkInformation(chargeId);
+      if (paymentInfo.status === ENUM_PAYOS_PAYMENT_STATUS.PAID) {
+        return {
+          success: true,
+        };
+      }
+      return ERROR_MESSAGE_DEFAULT;
+    } catch (error) {
+      console.log(`:::🚀 ${get(error, 'message', error)}`);
+      return ERROR_MESSAGE_DEFAULT;
+    }
   }
 }

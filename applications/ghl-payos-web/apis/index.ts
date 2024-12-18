@@ -19,3 +19,10 @@ export const getPaymentGatewayKeys = (payload: string) => {
     },
   });
 };
+
+export const createPaymentLink = (body: Record<string, any>) => {
+  return axiosPayOS()('api/payos/apps/payment-link', {
+    method: 'post',
+    data: body,
+  });
+};

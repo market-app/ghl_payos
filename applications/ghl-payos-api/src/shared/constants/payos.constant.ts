@@ -21,3 +21,11 @@ export enum ENUM_PROVIDER_CONFIG_KEY {
   API_KEY = 'apiKey',
   PUBLISHABLE_KEY = 'publishableKey',
 }
+
+export enum ENUM_VERIFY_PAYMENT_TYPE {
+  VERIFY = 'verify',
+}
+
+export enum ENUM_PAYOS_PAYMENT_STATUS {
+  PAID = 'PAID',
+}
