@@ -3,7 +3,7 @@
   "version": "4.85.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3002",
+    "dev": "next dev -p 3302",
     "build": "next build",
     "start": "NODE_ENV=production node index.js",
     "lint": "next lint",
