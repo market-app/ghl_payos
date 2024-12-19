@@ -177,7 +177,7 @@ export class GoHighLevelPayOSAppsController {
         createdBy: ENUM_CREATED_BY_DEFAULT.SYSTEM,
         status: ENUM_ORDER_STATUS.NEW,
       });
-      orderId = order;
+      orderId = order.id;
 
       const providerConfig = await this.getPaymentGatewayKeys({
         activeLocation: app.locationId,

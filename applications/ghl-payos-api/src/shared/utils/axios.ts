@@ -10,6 +10,7 @@ import { HistoryRequestsEntity } from '../entities/payos/histoty-request.entity'
 export function createAxiosInstance(
   config: AxiosRequestConfig,
   log: Repository<HistoryRequestsEntity>,
+  locationId?: string,
 ): AxiosInstance {
   let logId;
   const instance = axios.create(config);
@@ -27,6 +28,7 @@ export function createAxiosInstance(
       },
       createdAt: new Date(),
       createdBy: 'system',
+      locationId,
     });
     logId = createLog.id;
 
@@ -65,14 +67,16 @@ export function createAxiosInstance(
 
 export const ghlApi = ({
   log,
+  locationId,
 }: {
   log: Repository<HistoryRequestsEntity>;
+  locationId?: string;
 }): AxiosInstance => {
   const ghlApiConfig: AxiosRequestConfig = {
     baseURL: process.env.GHL_HOST,
     timeout: 60000,
   };
 
-  const instance = createAxiosInstance(ghlApiConfig, log);
+  const instance = createAxiosInstance(ghlApiConfig, log, locationId);
   return instance;
 };

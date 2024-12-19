@@ -19,6 +19,7 @@ import config, { PPayOS_DB } from './config';
 import { GracefulShutdown } from './graceful-shutdown';
 import { GoHighLevelPayOSAppsModule } from './modules/gohighlevel-payos/apps/apps.module';
 import { GoHighLevelPayOSAuthenticationModule } from './modules/gohighlevel-payos/auth/auth.module';
+import { GoHighLevelPayOSSubscriptionsModule } from './modules/gohighlevel-payos/subscriptions/subscriptions.module';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -52,6 +53,7 @@ axios.defaults.timeout = 60000;
     }),
     GoHighLevelPayOSAuthenticationModule,
     GoHighLevelPayOSAppsModule,
+    GoHighLevelPayOSSubscriptionsModule,
   ],
   exports: [],
   providers: [GracefulShutdown],

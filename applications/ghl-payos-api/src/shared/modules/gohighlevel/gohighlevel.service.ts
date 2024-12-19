@@ -54,7 +54,10 @@ export class GoHighLevelService {
     }
   }
 
-  async getNewToken(refreshToken: string): Promise<GetAccessTokenResponseDTO> {
+  async getNewToken(
+    refreshToken: string,
+    locationId: string,
+  ): Promise<GetAccessTokenResponseDTO> {
     try {
       const body = {
         refresh_token: refreshToken,
@@ -62,16 +65,16 @@ export class GoHighLevelService {
         client_secret: process.env.GHL_CLIENT_SECRET || '',
         grant_type: ENUM_GHL_GRANT_TYPE.REFRESH_TOKEN,
       };
-      const response = await ghlApi({ log: this.historyRequestsRepository })(
-        '/oauth/token',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          data: new URLSearchParams(body).toString(),
+      const response = await ghlApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })('/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-      ).then((res) => res.data);
+        data: new URLSearchParams(body).toString(),
+      }).then((res) => res.data);
 
       return response;
     } catch (error) {
@@ -99,23 +102,23 @@ export class GoHighLevelService {
           accessToken,
         });
       }
-      const response = await ghlApi({ log: this.historyRequestsRepository })(
-        '/payments/custom-provider/disconnect',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${newAccessToken}`,
-            Version: process.env.GHL_VERSION || '',
-          },
-          params: {
-            locationId,
-          },
-          data: {
-            liveMode: true,
-          },
+      const response = await ghlApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })('/payments/custom-provider/disconnect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${newAccessToken}`,
+          Version: process.env.GHL_VERSION || '',
         },
-      ).then((res) => res.data);
+        params: {
+          locationId,
+        },
+        data: {
+          liveMode: true,
+        },
+      }).then((res) => res.data);
 
       return response;
     } catch (error) {
@@ -143,20 +146,20 @@ export class GoHighLevelService {
           accessToken,
         });
       }
-      const response = await ghlApi({ log: this.historyRequestsRepository })(
-        '/payments/custom-provider/provider',
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${newAccessToken}`,
-            Version: process.env.GHL_VERSION || '',
-          },
-          params: {
-            locationId,
-          },
+      const response = await ghlApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })('/payments/custom-provider/provider', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Bearer ${newAccessToken}`,
+          Version: process.env.GHL_VERSION || '',
         },
-      ).then((res) => res.data);
+        params: {
+          locationId,
+        },
+      }).then((res) => res.data);
       return response;
     } catch (error) {
       throw new BadRequestException(error);
@@ -224,30 +227,30 @@ export class GoHighLevelService {
         });
       }
 
-      const response = await ghlApi({ log: this.historyRequestsRepository })(
-        '/payments/custom-provider/connect',
-        {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${newAccessToken}`,
-            Version: process.env.GHL_VERSION || '',
-          },
-          params: {
-            locationId,
-          },
-          data: JSON.stringify({
-            live: {
-              [ENUM_PROVIDER_CONFIG_KEY.API_KEY]: apiKey,
-              [ENUM_PROVIDER_CONFIG_KEY.PUBLISHABLE_KEY]: 'none',
-            },
-            test: {
-              [ENUM_PROVIDER_CONFIG_KEY.API_KEY]: apiKey,
-              [ENUM_PROVIDER_CONFIG_KEY.PUBLISHABLE_KEY]: 'none',
-            },
-          }),
+      const response = await ghlApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })('/payments/custom-provider/connect', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${newAccessToken}`,
+          Version: process.env.GHL_VERSION || '',
         },
-      ).then((res) => res.data);
+        params: {
+          locationId,
+        },
+        data: JSON.stringify({
+          live: {
+            [ENUM_PROVIDER_CONFIG_KEY.API_KEY]: apiKey,
+            [ENUM_PROVIDER_CONFIG_KEY.PUBLISHABLE_KEY]: 'none',
+          },
+          test: {
+            [ENUM_PROVIDER_CONFIG_KEY.API_KEY]: apiKey,
+            [ENUM_PROVIDER_CONFIG_KEY.PUBLISHABLE_KEY]: 'none',
+          },
+        }),
+      }).then((res) => res.data);
       return response;
     } catch (error) {
       throw new BadRequestException(error);
@@ -275,20 +278,20 @@ export class GoHighLevelService {
         });
       }
 
-      const response = await ghlApi({ log: this.historyRequestsRepository })(
-        '/payments/custom-provider/connect',
-        {
-          method: 'get',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${newAccessToken}`,
-            Version: process.env.GHL_VERSION || '',
-          },
-          params: {
-            locationId,
-          },
+      const response = await ghlApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })('/payments/custom-provider/connect', {
+        method: 'get',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Bearer ${newAccessToken}`,
+          Version: process.env.GHL_VERSION || '',
         },
-      ).then((res) => res.data);
+        params: {
+          locationId,
+        },
+      }).then((res) => res.data);
       return response;
     } catch (error) {
       throw new BadRequestException(error);
@@ -311,14 +314,18 @@ export class GoHighLevelService {
     if (!app) {
       throw new BadRequestException('App not found');
     }
-    const newInfoToken = await this.getNewToken(app.refreshToken);
+    const newInfoToken = await this.getNewToken(
+      app.refreshToken,
+      app.locationId,
+    );
     await this.appsRepository.update(
       {
         id: app.id,
       },
       {
         accessToken: newInfoToken.access_token,
-        createdAt: new Date(),
+        refreshToken: newInfoToken.refresh_token,
+        latestUpdateToken: new Date(),
       },
     );
     return newInfoToken.access_token;

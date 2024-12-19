@@ -9,7 +9,11 @@ export const isTokenExpired = (createdAt: Date, expireIn: number): boolean => {
 
   // Lấy thời gian hiện tại theo cùng timezone
   const now = dayjs().tz(TIMEZONE);
+  console.log(expireTime.format(), now.format());
+
+  const isExpired = now.isAfter(expireTime);
+  console.log(`🚀🚀🚀 EXPIRED TIME processing: ${isExpired}`);
 
   // So sánh
-  return now.isAfter(expireTime);
+  return isExpired;
 };
