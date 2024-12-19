@@ -29,3 +29,15 @@ export enum ENUM_VERIFY_PAYMENT_TYPE {
 export enum ENUM_PAYOS_PAYMENT_STATUS {
   PAID = 'PAID',
 }
+
+export enum ENUM_CREATED_BY_DEFAULT {
+  SYSTEM = 'system',
+  GHL_SYSTEM = 'ghl_system',
+  PAYOS_SYSTEM = 'payos_system',
+}
+
+export enum ENUM_ORDER_STATUS {
+  NEW = 'new',
+  PAID = 'paid',
+  FAILED = 'failed',
+}

@@ -13,6 +13,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { get } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import {
+  ENUM_CREATED_BY_DEFAULT,
+  ENUM_ORDER_STATUS,
   ENUM_PAYOS_PAYMENT_STATUS,
   ENUM_PROVIDER_CONFIG_KEY,
   ENUM_VERIFY_PAYMENT_TYPE,
@@ -38,6 +40,7 @@ import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.d
 import PayOS from '@payos/node';
 import dayjs from 'dayjs';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
+import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
 
 @Controller('/payos/apps')
 export class GoHighLevelPayOSAppsController {
@@ -49,6 +52,9 @@ export class GoHighLevelPayOSAppsController {
 
     @InjectRepository(WebhookLogsEntity, PPayOS_DB)
     private webhookLogsRepository: Repository<WebhookLogsEntity>,
+
+    @InjectRepository(OrdersEntity, PPayOS_DB)
+    private ordersRepository: Repository<OrdersEntity>,
   ) {}
 
   @UseGuards(DecryptPayloadSSOKeyGuard)
@@ -157,7 +163,22 @@ export class GoHighLevelPayOSAppsController {
     if (!app) {
       throw new BadRequestException('App not found');
     }
+    const orderCode = dayjs().unix();
+    const description = transactionId || 'Thanh toan don hang';
+    let orderId;
     try {
+      const order = await this.ordersRepository.save({
+        amount,
+        transactionId,
+        locationId,
+        orderCode,
+        description,
+        createdAt: new Date(),
+        createdBy: ENUM_CREATED_BY_DEFAULT.SYSTEM,
+        status: ENUM_ORDER_STATUS.NEW,
+      });
+      orderId = order;
+
       const providerConfig = await this.getPaymentGatewayKeys({
         activeLocation: app.locationId,
         userId: app.userId,
@@ -176,14 +197,39 @@ export class GoHighLevelPayOSAppsController {
         process.env.PAYOS_PARTNER_CODE,
       );
       const paymentLink = await payOS.createPaymentLink({
-        orderCode: dayjs().unix(),
+        orderCode,
         amount,
-        description: transactionId || 'Thanh toan don hang',
+        description,
         cancelUrl: redirectUri,
         returnUrl: redirectUri,
       });
+      await this.ordersRepository.update(
+        {
+          id: order.id,
+        },
+        {
+          params: { paymentLink } as any,
+          paymentLinkId: paymentLink.paymentLinkId,
+          checkoutUrl: paymentLink.checkoutUrl,
+          updatedAt: new Date(),
+          updatedBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
+        },
+      );
       return paymentLink.checkoutUrl;
     } catch (error) {
+      if (orderId) {
+        await this.ordersRepository.update(
+          {
+            id: orderId,
+          },
+          {
+            status: ENUM_ORDER_STATUS.FAILED,
+            params: get(error, 'message', error),
+            updatedAt: new Date(),
+            updatedBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
+          },
+        );
+      }
       const errMessage = get(error, 'message', ERROR_MESSAGE_DEFAULT);
       throw new BadRequestException(errMessage);
     }
