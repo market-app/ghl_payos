@@ -218,17 +218,22 @@ export class GoHighLevelPayOSAppsController {
       return paymentLink.checkoutUrl;
     } catch (error) {
       if (orderId) {
-        await this.ordersRepository.update(
-          {
-            id: orderId,
-          },
-          {
+        await this.ordersRepository
+          .createQueryBuilder()
+          .update()
+          .set({
             status: ENUM_ORDER_STATUS.FAILED,
-            params: get(error, 'message', error),
+            params: () =>
+              `params || '${JSON.stringify({
+                error: get(error, 'message', error),
+              })}'`,
             updatedAt: new Date(),
             updatedBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
-          },
-        );
+          })
+          .where(`id = :id`, {
+            id: orderId,
+          })
+          .execute();
       }
       const errMessage = get(error, 'message', ERROR_MESSAGE_DEFAULT);
       throw new BadRequestException(errMessage);
@@ -305,7 +310,7 @@ export class GoHighLevelPayOSAppsController {
   async verifyPayment(@Body() body: VerifyPaymentRequestDTO): Promise<any> {
     console.log(body);
     const { apiKey, chargeId, type } = body;
-    await this.webhookLogsRepository.save({
+    const webhookLog = await this.webhookLogsRepository.save({
       body,
       createdAt: new Date(),
       createdBy: 'ghl-system',
@@ -325,16 +330,23 @@ export class GoHighLevelPayOSAppsController {
       const paymentInfo = await payOS.getPaymentLinkInformation(chargeId);
       if (paymentInfo.status === ENUM_PAYOS_PAYMENT_STATUS.PAID) {
         //update status order
-        await this.ordersRepository.update(
-          {
-            paymentLinkId: chargeId,
-          },
-          {
+        await this.ordersRepository
+          .createQueryBuilder()
+          .update()
+          .set({
             status: ENUM_ORDER_STATUS.PAID,
             updatedAt: new Date(),
             updatedBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
-          },
-        );
+            params: () =>
+              `params || '${JSON.stringify({
+                webhookLogId: webhookLog.id,
+              })}'`,
+          })
+          .where(`paymentLinkId = :paymentLinkId`, {
+            paymentLinkId: chargeId,
+          })
+          .execute();
+
         return {
           success: true,
         };
