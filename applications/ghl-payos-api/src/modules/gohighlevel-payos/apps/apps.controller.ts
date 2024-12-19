@@ -324,6 +324,17 @@ export class GoHighLevelPayOSAppsController {
     try {
       const paymentInfo = await payOS.getPaymentLinkInformation(chargeId);
       if (paymentInfo.status === ENUM_PAYOS_PAYMENT_STATUS.PAID) {
+        //update status order
+        await this.ordersRepository.update(
+          {
+            paymentLinkId: chargeId,
+          },
+          {
+            status: ENUM_ORDER_STATUS.PAID,
+            updatedAt: new Date(),
+            updatedBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
+          },
+        );
         return {
           success: true,
         };
