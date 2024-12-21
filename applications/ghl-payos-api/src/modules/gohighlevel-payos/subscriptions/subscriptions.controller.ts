@@ -36,7 +36,6 @@ export class GoHighLevelPayOSSubscriptionsController {
         locationId: appInfo.activeLocation,
       })
       .andWhere('sub.end_date >= NOW()')
-      .andWhere('sub.start_date <= NOW()')
       .getMany();
 
     if (isEmpty(activeSubs)) {

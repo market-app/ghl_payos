@@ -68,16 +68,6 @@ const PayOSConfig = () => {
     } finally {
       setLoading(false);
     }
-    // getPaymentGatewayKeys(encryptKey)
-    //   .then((res) => {
-    //     form.setFieldsValue(res as any);
-    //   })
-    //   .catch((error) => {
-
-    //   })
-    //   .finally(() => {
-    //     setLoading(false);
-    //   });
   };
   useEffect(() => {
     window.parent.postMessage({ message: 'REQUEST_USER_DATA' }, '*');
@@ -98,7 +88,7 @@ const PayOSConfig = () => {
 
   return (
     <div>
-      <SubscriptionDetail subscriptions={subscriptions}/>
+      <SubscriptionDetail subscriptions={subscriptions} payload={payload} />
       <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} style={{ padding: '30px' }}>
         <div>
           <Typography.Title level={4}>Thông tin cổng thanh toán</Typography.Title>

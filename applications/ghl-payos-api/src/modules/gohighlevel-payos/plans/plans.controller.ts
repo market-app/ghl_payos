@@ -99,13 +99,38 @@ export class GoHighLevelPayOSPlansController {
         locationId: order.locationId,
       },
     );
-    const today = dayjs().tz(TIMEZONE).startOf('date').toDate();
+    let duration = {
+      startDate: dayjs().tz(TIMEZONE).startOf('date').toDate(),
+      endDate: dayjs().tz(TIMEZONE).add(1, 'months').endOf('date').toDate(),
+    };
+    const findLatestSub = await this.subscriptionsRepository.findOne({
+      where: {
+        locationId: order.locationId,
+        planId: get(order.params, 'planId'),
+      },
+      order: {
+        endDate: 'DESC',
+      },
+    });
+    if (findLatestSub) {
+      duration = {
+        startDate: dayjs(findLatestSub.endDate)
+          .tz(TIMEZONE)
+          .add(1, 'second')
+          .toDate(),
+        endDate: dayjs(findLatestSub.endDate)
+          .tz(TIMEZONE)
+          .add(1, 'months')
+          .endOf('date')
+          .toDate(),
+      };
+    }
     // create sub
     await this.subscriptionsRepository.save({
       planId: get(order.params, 'planId'),
       locationId: order.locationId,
-      startDate: today,
-      endDate: dayjs().tz(TIMEZONE).add(1, 'months').endOf('date').toDate(),
+      startDate: duration.startDate,
+      endDate: duration.endDate,
       createdAt: new Date(),
       createdBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
     });
