@@ -2,19 +2,17 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PayOS from '@payos/node';
 import dayjs from 'dayjs';
-import { get, pick } from 'lodash';
+import { get } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import {
   ENUM_CREATED_BY_DEFAULT,
   ENUM_ORDER_STATUS,
-  ENUM_PAYOS_PAYMENT_STATUS,
   ENUM_PLAN_DURATION_TYPE,
   TIMEZONE,
 } from 'src/shared/constants/payos.constant';
@@ -26,7 +24,6 @@ import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.enti
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { DecryptPayloadSSOKeyGuard } from 'src/shared/guards/DecryptPayloadSSOKey.guard';
 import { Repository } from 'typeorm';
-import { GoHighLevelPayOSAppsController } from '../apps/apps.controller';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
 import { BuyPlanRequestDTO } from './dto/buy-plan-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
@@ -34,8 +31,6 @@ import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 @Controller('payos/plans')
 export class GoHighLevelPayOSPlansController {
   constructor(
-    private appsController: GoHighLevelPayOSAppsController,
-
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
 
@@ -81,7 +76,7 @@ export class GoHighLevelPayOSPlansController {
       },
     });
     if (!order) {
-      throw new BadRequestException('Order not found');
+      return 'Order not found';
     }
     await this.ordersRepository.update(
       {
