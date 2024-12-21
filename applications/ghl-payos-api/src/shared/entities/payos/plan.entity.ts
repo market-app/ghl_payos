@@ -3,14 +3,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  OneToMany,
   UpdateDateColumn,
 } from 'typeorm';
-import { PlansEntity } from './plan.entity';
+import { SubscriptionsEntity } from './subscription.entity';
 
-@Entity({ name: 'subscriptions' })
-export class SubscriptionsEntity {
+@Entity({ name: 'plans' })
+export class PlansEntity {
   @Column({
     type: 'integer',
     nullable: false,
@@ -20,33 +19,24 @@ export class SubscriptionsEntity {
   id: number;
 
   @Column({
-    name: 'location_id',
     type: 'varchar',
-    length: 40,
     nullable: false,
   })
-  locationId: string;
+  name: string;
 
   @Column({
-    name: 'plan_id',
     type: 'integer',
     nullable: false,
   })
-  planId: number;
+  amount: number;
 
   @Column({
-    name: 'start_date',
-    type: 'timestamptz',
+    name: 'duration_type',
+    type: 'varchar',
+    length: 50,
     nullable: false,
   })
-  startDate: Date;
-
-  @Column({
-    name: 'end_date',
-    type: 'timestamptz',
-    nullable: false,
-  })
-  endDate: Date;
+  durationType: string;
 
   @Column({
     type: 'jsonb',
@@ -95,7 +85,6 @@ export class SubscriptionsEntity {
   })
   deletedBy: string;
 
-  @ManyToOne(() => PlansEntity, (plan) => plan.subscriptions)
-  @JoinColumn({ name: 'plan_id' })
-  plan: PlansEntity;
+  @OneToMany(() => SubscriptionsEntity, (subscription) => subscription.plan)
+  subscriptions: SubscriptionsEntity[];
 }

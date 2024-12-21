@@ -26,3 +26,24 @@ export const createPaymentLink = (body: Record<string, any>) => {
     data: body,
   });
 };
+
+export const getActiveSubscription = (payload: string) => {
+  return axiosPayOS()('/api/payos/subscriptions', {
+    method: 'get',
+    headers: {
+      'x-sso-payload': payload,
+    },
+  });
+};
+
+export const buyPlanByLocation = (payload: string) => {
+  return axiosPayOS()('/api/payos/plans', {
+    method: 'post',
+    data: {
+      redirectUri: window.location.href,
+    },
+    headers: {
+      'x-sso-payload': payload,
+    },
+  });
+};

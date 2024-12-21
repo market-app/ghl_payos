@@ -41,3 +41,7 @@ export enum ENUM_ORDER_STATUS {
   PAID = 'paid',
   FAILED = 'failed',
 }
+
+export enum ENUM_PLAN_DURATION_TYPE {
+  MONTHLY = 'monthly',
+}

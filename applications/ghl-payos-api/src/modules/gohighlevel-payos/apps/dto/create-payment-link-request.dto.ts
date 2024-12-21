@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsPositive, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class CreatePaymentLinkRequestDTO {
   @IsString()
@@ -16,4 +16,8 @@ export class CreatePaymentLinkRequestDTO {
   @IsString()
   @IsNotEmpty()
   redirectUri: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
 }

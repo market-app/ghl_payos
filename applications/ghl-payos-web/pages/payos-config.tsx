@@ -1,7 +1,9 @@
 import { Button, Divider, Form, Input, notification, Typography } from 'antd';
-import { getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
+import { getActiveSubscription, getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
 import LoadingPage from 'components/LoadingPage';
-import { get } from 'lodash';
+import ProcessBuyPlan from 'components/ProcessBuyPlan';
+import SubscriptionDetail from 'components/SubscriptionDetail';
+import { get, isEmpty } from 'lodash';
 import { useEffect, useState } from 'react';
 import { IPayOSPaymentGatewayKey } from 'types';
 
@@ -9,7 +11,8 @@ const PayOSConfig = () => {
   const [form] = Form.useForm<IPayOSPaymentGatewayKey>();
   const [payload, setPayload] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [subscriptions, setSubscriptions] = useState([]);
 
   const onSubmit = () => {
     setLoadingSubmit(true);
@@ -40,24 +43,41 @@ const PayOSConfig = () => {
    * Lấy payload để decrypt ra các thông tin của client
    */
   const handleMessage = async ({ data }: MessageEvent) => {
-    if (data.message === 'REQUEST_USER_DATA_RESPONSE') {
-      window.removeEventListener('message', handleMessage);
-      setPayload(get(data, 'payload'));
-
-      setLoading(true);
-      getPaymentGatewayKeys(get(data, 'payload'))
-        .then((res) => {
-          form.setFieldsValue(res as any);
-        })
-        .catch((error) => {
-          notification.error({
-            message: get(error, 'response.data.message', `${error}`),
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    if (data.message !== 'REQUEST_USER_DATA_RESPONSE') {
+      setLoading(false);
+      return;
     }
+
+    window.removeEventListener('message', handleMessage);
+    const encryptKey = get(data, 'payload');
+    setPayload(encryptKey);
+
+    try {
+      const [infoSub, infoGateway] = await Promise.all([
+        getActiveSubscription(encryptKey),
+        getPaymentGatewayKeys(encryptKey),
+      ]);
+      console.log(infoSub, infoGateway);
+
+      setSubscriptions(infoSub as any);
+      form.setFieldsValue(infoGateway as any);
+    } catch (error) {
+      notification.error({
+        message: get(error, 'response.data.message', `${error}`),
+      });
+    } finally {
+      setLoading(false);
+    }
+    // getPaymentGatewayKeys(encryptKey)
+    //   .then((res) => {
+    //     form.setFieldsValue(res as any);
+    //   })
+    //   .catch((error) => {
+
+    //   })
+    //   .finally(() => {
+    //     setLoading(false);
+    //   });
   };
   useEffect(() => {
     window.parent.postMessage({ message: 'REQUEST_USER_DATA' }, '*');
@@ -72,8 +92,13 @@ const PayOSConfig = () => {
     return <LoadingPage />;
   }
 
+  if (isEmpty(subscriptions)) {
+    return <ProcessBuyPlan payload={payload} />;
+  }
+
   return (
     <div>
+      <SubscriptionDetail subscriptions={subscriptions}/>
       <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} style={{ padding: '30px' }}>
         <div>
           <Typography.Title level={4}>Thông tin cổng thanh toán</Typography.Title>

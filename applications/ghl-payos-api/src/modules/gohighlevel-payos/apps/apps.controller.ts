@@ -164,7 +164,7 @@ export class GoHighLevelPayOSAppsController {
       throw new BadRequestException('App not found');
     }
     const orderCode = dayjs().unix();
-    const description = transactionId || 'Thanh toan don hang';
+    const description = get(body, 'description') || transactionId;
     let orderId;
     try {
       const order = await this.ordersRepository.save({
@@ -254,7 +254,7 @@ export class GoHighLevelPayOSAppsController {
       locationId,
       body,
       createdAt: new Date(),
-      createdBy: 'ghl-system',
+      createdBy: ENUM_CREATED_BY_DEFAULT.GHL_SYSTEM,
     });
 
     if (type !== ENUM_WEBHOOK_TYPE.UNINSTALL || !locationId) {
@@ -294,7 +294,7 @@ export class GoHighLevelPayOSAppsController {
       },
       {
         deletedAt: new Date(),
-        deletedBy: 'ghl-system',
+        deletedBy: ENUM_CREATED_BY_DEFAULT.GHL_SYSTEM,
       },
     );
     if (errMessage) {
@@ -313,7 +313,7 @@ export class GoHighLevelPayOSAppsController {
     const webhookLog = await this.webhookLogsRepository.save({
       body,
       createdAt: new Date(),
-      createdBy: 'ghl-system',
+      createdBy: ENUM_CREATED_BY_DEFAULT.GHL_SYSTEM,
     });
     const decryptKeys = decrypt(apiKey);
     if (type !== ENUM_VERIFY_PAYMENT_TYPE.VERIFY || !decryptKeys) {

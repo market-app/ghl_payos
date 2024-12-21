@@ -5,7 +5,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { pick } from 'lodash';
+import { isEmpty, pick } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
@@ -29,18 +29,19 @@ export class GoHighLevelPayOSSubscriptionsController {
   async getActiveSubscription(
     @RequestAppInfo() appInfo: AppInfoDTO,
   ): Promise<any> {
-    const activeSub = await this.subscriptionsRepository
+    const activeSubs = await this.subscriptionsRepository
       .createQueryBuilder('sub')
+      .leftJoinAndSelect('sub.plan', 'plan')
       .andWhere({
         locationId: appInfo.activeLocation,
       })
       .andWhere('sub.end_date >= NOW()')
       .andWhere('sub.start_date <= NOW()')
-      .getOne();
+      .getMany();
 
-    if (!activeSub) {
+    if (isEmpty(activeSubs)) {
       throw new BadRequestException('Subscription not found');
     }
-    return pick(activeSub, ['startDate', 'endDate']);
+    return activeSubs.map((sub) => pick(sub, ['endDate', 'startDate', 'plan']));
   }
 }
