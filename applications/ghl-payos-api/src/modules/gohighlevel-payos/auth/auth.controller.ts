@@ -48,7 +48,7 @@ export class GoHighLevelPayOSAuthenticationController {
         locationId: infoApp.locationId,
         userId: infoApp.userId,
         createdAt: new Date(),
-        latest_update_token: new Date(),
+        latestUpdateToken: new Date(),
         createdBy: 'system',
         state: ENUM_PAYOS_APP_STATE.INSTALLED,
       });
