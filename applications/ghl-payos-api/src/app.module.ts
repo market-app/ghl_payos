@@ -17,10 +17,12 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import config, { PPayOS_DB } from './config';
 import { GracefulShutdown } from './graceful-shutdown';
+import { GHLClientModule } from './modules/client/client.module';
 import { GoHighLevelPayOSAppsModule } from './modules/gohighlevel-payos/apps/apps.module';
 import { GoHighLevelPayOSAuthenticationModule } from './modules/gohighlevel-payos/auth/auth.module';
 import { GoHighLevelPayOSPlansModule } from './modules/gohighlevel-payos/plans/plans.module';
 import { GoHighLevelPayOSSubscriptionsModule } from './modules/gohighlevel-payos/subscriptions/subscriptions.module';
+import { GHLMigrateModule } from './modules/migrate/migrate.module';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -56,6 +58,8 @@ axios.defaults.timeout = 60000;
     GoHighLevelPayOSAppsModule,
     GoHighLevelPayOSSubscriptionsModule,
     GoHighLevelPayOSPlansModule,
+    GHLMigrateModule,
+    GHLClientModule,
   ],
   exports: [],
   providers: [GracefulShutdown],
