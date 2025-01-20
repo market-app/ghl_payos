@@ -41,7 +41,17 @@ export const buyPlanByLocation = (payload: string) => {
     method: 'post',
     data: {
       redirectUri: `${window.location.href}/payment-success`,
+      // TODO: add data planId
     },
+    headers: {
+      'x-sso-payload': payload,
+    },
+  });
+};
+
+export const getPlans = (payload: string) => {
+  return axiosPayOS()('/api/payos/plans', {
+    method: 'get',
     headers: {
       'x-sso-payload': payload,
     },

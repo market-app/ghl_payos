@@ -4,6 +4,7 @@ import { ERROR_MESSAGE_DEFAULT } from '../constants';
 import dayjs from 'dayjs';
 import { get } from 'lodash';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 interface IProps {
   subscriptions: {
@@ -15,22 +16,24 @@ interface IProps {
 }
 const SubscriptionDetail = ({ subscriptions, payload }: IProps) => {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const buyPlan = () => {
     setLoading(true);
-    buyPlanByLocation(payload)
-      .then((res) => {
-        window.open(get(res, 'checkoutUrl', ''), '_blank');
-      })
-      .catch((err) => {
-        notification.error({
-          message: get(err, 'response.data.message', ERROR_MESSAGE_DEFAULT),
-        });
-        console.log(err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    router.push('/plan');
+    // buyPlanByLocation(payload)
+    //   .then((res) => {
+    //     window.open(get(res, 'checkoutUrl', ''), '_blank');
+    //   })
+    //   .catch((err) => {
+    //     notification.error({
+    //       message: get(err, 'response.data.message', ERROR_MESSAGE_DEFAULT),
+    //     });
+    //     console.log(err);
+    //   })
+    //   .finally(() => {
+    //     setLoading(false);
+    //   });
   };
 
   return (

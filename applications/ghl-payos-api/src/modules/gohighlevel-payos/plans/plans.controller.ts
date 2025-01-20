@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -23,6 +24,7 @@ import { PlansEntity } from 'src/shared/entities/payos/plan.entity';
 import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { DecryptPayloadSSOKeyGuard } from 'src/shared/guards/DecryptPayloadSSOKey.guard';
+import { parseErrorToJson } from 'src/shared/utils/handle-error';
 import { Repository } from 'typeorm';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
 import { BuyPlanRequestDTO } from './dto/buy-plan-request.dto';
@@ -46,6 +48,20 @@ export class GoHighLevelPayOSPlansController {
     @InjectRepository(SubscriptionsEntity, PPayOS_DB)
     private subscriptionsRepository: Repository<SubscriptionsEntity>,
   ) {}
+
+  @Get()
+  @UseGuards(DecryptPayloadSSOKeyGuard)
+  async getPlans(): Promise<PlansEntity[]> {
+    try {
+      const plans = await this.planRepository.find({
+        select: ['amount', 'id', 'name', 'durationType'],
+      });
+      return plans;
+    } catch (error) {
+      const errMessage = parseErrorToJson(error);
+      throw new BadRequestException(errMessage);
+    }
+  }
 
   @Post('webhook/verify-payment')
   async verifyPayment(@Body() body: VerifyPaymentRequestDTO): Promise<any> {
