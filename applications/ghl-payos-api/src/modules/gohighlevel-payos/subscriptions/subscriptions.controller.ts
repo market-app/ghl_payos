@@ -29,7 +29,7 @@ export class GoHighLevelPayOSSubscriptionsController {
   async getActiveSubscription(
     @RequestAppInfo() appInfo: AppInfoDTO,
   ): Promise<any> {
-    const activeSubs = await this.subscriptionsRepository
+    const activeSubs: SubscriptionsEntity[] = await this.subscriptionsRepository
       .createQueryBuilder('sub')
       .leftJoinAndSelect('sub.plan', 'plan')
       .andWhere({
@@ -37,6 +37,12 @@ export class GoHighLevelPayOSSubscriptionsController {
       })
       .andWhere('sub.end_date >= NOW()')
       .getMany();
+
+    console.log(
+      `🚀🚀🚀 current sub locationId ${
+        appInfo.activeLocation
+      }: ${JSON.stringify(activeSubs.map((item) => item.id))}`,
+    );
 
     if (isEmpty(activeSubs)) {
       throw new BadRequestException('Subscription not found');
