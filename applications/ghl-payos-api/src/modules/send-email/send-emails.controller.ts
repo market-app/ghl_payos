@@ -6,9 +6,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { get, isEmpty } from 'lodash';
-import { EmailParams, MailerSend, Recipient, Sender } from 'mailersend';
 import { PPayOS_DB } from 'src/config';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { AuthTokenHeaderGuard } from 'src/shared/guards/AuthTokenHeader.guard';
@@ -40,10 +40,6 @@ export class SendEmailsController {
     if (isEmpty(activeApps)) {
       throw new BadRequestException('Not found active user');
     }
-    const mailerSend = new MailerSend({
-      apiKey: process.env.MAILER_SEND_API_KEY || '',
-    });
-    const sentFrom = new Sender('no-reply@hieunt.org', 'PPayOS App');
 
     const response: Record<string, any> = [];
 
@@ -69,25 +65,35 @@ export class SendEmailsController {
           ? 'bibi030301@gmail.com'
           : activeApp.email;
 
-      const recipients = [new Recipient(newRecipient, newRecipient)];
-
-      const emailParams = new EmailParams()
-        .setFrom(sentFrom)
-        .setTo(recipients)
-        .setReplyTo(sentFrom)
-        .setTemplateId('0p7kx4xo6km49yjr')
-        .setPersonalization([
+      if (!isTesting) {
+        await axios.post(
+          'https://api.mailersend.com/v1/email',
           {
-            email: newRecipient,
-            data: {
-              email: newRecipient,
-              expirationDate: dayjs().format('DD/MM/YYYY'),
+            from: {
+              email: 'no-reply@hieunt.org',
+            },
+            to: [
+              {
+                email: newRecipient,
+              },
+            ],
+            template_id: '0p7kx4xo6km49yjr',
+            personalization: [
+              {
+                email: newRecipient,
+                data: {
+                  email: newRecipient,
+                  expirationDate: dayjs().format('DD/MM/YYYY'),
+                },
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.MAILER_SEND_API_KEY || ''}`,
             },
           },
-        ]);
-
-      if (!isTesting) {
-        await mailerSend.email.send(emailParams);
+        );
       }
     }
 
