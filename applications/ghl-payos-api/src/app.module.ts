@@ -21,6 +21,7 @@ import { GoHighLevelPayOSAppsModule } from './modules/gohighlevel-payos/apps/app
 import { GoHighLevelPayOSAuthenticationModule } from './modules/gohighlevel-payos/auth/auth.module';
 import { GoHighLevelPayOSPlansModule } from './modules/gohighlevel-payos/plans/plans.module';
 import { GoHighLevelPayOSSubscriptionsModule } from './modules/gohighlevel-payos/subscriptions/subscriptions.module';
+import { SendEmailsModule } from './modules/send-email/send-emails.module';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -56,6 +57,7 @@ axios.defaults.timeout = 60000;
     GoHighLevelPayOSAppsModule,
     GoHighLevelPayOSSubscriptionsModule,
     GoHighLevelPayOSPlansModule,
+    SendEmailsModule,
   ],
   exports: [],
   providers: [GracefulShutdown],
