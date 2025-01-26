@@ -17,3 +17,10 @@ export const isTokenExpired = (createdAt: Date, expireIn: number): boolean => {
   // So sánh
   return isExpired;
 };
+
+export const isValidEmail = (email: string): boolean => {
+  if (!email) return false;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
