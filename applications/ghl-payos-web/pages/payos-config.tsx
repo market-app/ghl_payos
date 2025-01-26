@@ -53,13 +53,20 @@ const PayOSConfig = () => {
     setPayload(encryptKey);
 
     try {
-      const [infoSub, infoGateway] = await Promise.all([
-        getActiveSubscription(encryptKey),
-        getPaymentGatewayKeys(encryptKey),
-      ]);
-      console.log(infoSub, infoGateway);
-
+      const infoSub = await  getActiveSubscription(encryptKey);
       setSubscriptions(infoSub as any);
+
+    } catch (error) {
+      notification.error({
+        message: get(error, 'response.data.message', `${error}`),
+      });
+    }finally {
+      setLoading(false);
+    }
+
+    try {
+      const infoGateway = getPaymentGatewayKeys(encryptKey);
+
       form.setFieldsValue(infoGateway as any);
     } catch (error) {
       notification.error({
