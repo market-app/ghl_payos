@@ -10,7 +10,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { get } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import {
   ENUM_CREATED_BY_DEFAULT,
@@ -41,11 +41,16 @@ import PayOS from '@payos/node';
 import dayjs from 'dayjs';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
+import { GoHighLevelPayOSSubscriptionsController } from '../subscriptions/subscriptions.controller';
+import { isValidEmail } from 'src/shared/utils';
+import axios from 'axios';
 
 @Controller('/payos/apps')
 export class GoHighLevelPayOSAppsController {
   constructor(
     private readonly ghlService: GoHighLevelService,
+
+    private readonly subscriptionController: GoHighLevelPayOSSubscriptionsController,
 
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
@@ -166,6 +171,56 @@ export class GoHighLevelPayOSAppsController {
     const orderCode = dayjs().unix();
     const description = get(body, 'description') || transactionId;
     let orderId;
+    // check subscription
+    let activeSubs = [];
+    try {
+      activeSubs = await this.subscriptionController.getActiveSubscription({
+        activeLocation: locationId,
+      } as AppInfoDTO);
+
+      if (isEmpty(activeSubs)) {
+        // send mail expire sub
+        const email = app.email;
+        if (!isValidEmail(email)) {
+          throw new BadRequestException(
+            'Không thể gửi mail do không đúng định dạng',
+          );
+        }
+        await axios.post(
+          'https://api.mailersend.com/v1/email',
+          {
+            from: {
+              email: 'no-reply@hieunt.org',
+            },
+            to: [
+              {
+                email,
+              },
+            ],
+            template_id: '0p7kx4xo6km49yjr',
+            personalization: [
+              {
+                email,
+                data: {
+                  email,
+                  expirationDate: dayjs().format('DD/MM/YYYY'),
+                },
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.MAILER_SEND_API_KEY || ''}`,
+            },
+          },
+        );
+        throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
+      }
+    } catch (error) {
+      console.log(`${error}`);
+      throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
+    }
+
     try {
       const order = await this.ordersRepository.save({
         amount,
