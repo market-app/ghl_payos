@@ -1,11 +1,6 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isEmpty, pick } from 'lodash';
+import { pick } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
@@ -38,9 +33,6 @@ export class GoHighLevelPayOSSubscriptionsController {
       .andWhere('sub.end_date >= NOW()')
       .getMany();
 
-    if (isEmpty(activeSubs)) {
-      throw new BadRequestException('Subscription not found');
-    }
     return activeSubs.map((sub) => pick(sub, ['endDate', 'startDate', 'plan']));
   }
 }
