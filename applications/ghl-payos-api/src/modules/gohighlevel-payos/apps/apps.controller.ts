@@ -217,7 +217,7 @@ export class GoHighLevelPayOSAppsController {
         throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
       }
     } catch (error) {
-      console.log(`${error}`);
+      console.log(`🚀🚀🚀 ${get(error, 'response.data.message', error)}`);
       throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
     }
 
