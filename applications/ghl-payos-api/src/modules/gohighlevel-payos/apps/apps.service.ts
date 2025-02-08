@@ -34,7 +34,6 @@ import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.d
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 
-@Controller('/payos/apps')
 export class GoHighLevelPayOSAppsService {
   constructor(
     private readonly ghlService: GoHighLevelService,
