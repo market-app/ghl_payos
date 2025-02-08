@@ -15,7 +15,7 @@ import { AuthTokenHeaderGuard } from 'src/shared/guards/AuthTokenHeader.guard';
 import { isValidEmail } from 'src/shared/utils';
 import { Repository } from 'typeorm';
 import { AppInfoDTO } from '../gohighlevel-payos/apps/dto/app-info.dto';
-import { GoHighLevelPayOSSubscriptionsController } from '../gohighlevel-payos/subscriptions/subscriptions.controller';
+import { GoHighLevelPayOSSubscriptionsService } from '../gohighlevel-payos/subscriptions/subscriptions.service';
 
 @Controller('send-emails')
 export class SendEmailsController {
@@ -23,7 +23,7 @@ export class SendEmailsController {
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
 
-    private readonly subscriptionController: GoHighLevelPayOSSubscriptionsController,
+    private readonly subscriptionService: GoHighLevelPayOSSubscriptionsService,
   ) {}
 
   @UseGuards(AuthTokenHeaderGuard)
@@ -48,7 +48,7 @@ export class SendEmailsController {
 
       let activeSubs = [];
       try {
-        activeSubs = await this.subscriptionController.getActiveSubscription({
+        activeSubs = await this.subscriptionService.getActiveSubscription({
           activeLocation: activeApp.locationId,
         } as AppInfoDTO);
       } catch (error) {

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller } from '@nestjs/common';
+import { BadRequestException, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PayOS from '@payos/node';
 import axios from 'axios';
@@ -28,7 +28,7 @@ import {
   formatKeysToEncrypt,
 } from 'src/shared/utils/encrypt';
 import { Repository } from 'typeorm';
-import { GoHighLevelPayOSSubscriptionsController } from '../subscriptions/subscriptions.controller';
+import { GoHighLevelPayOSSubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AppInfoDTO } from './dto/app-info.dto';
 import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
@@ -38,7 +38,7 @@ export class GoHighLevelPayOSAppsService {
   constructor(
     private readonly ghlService: GoHighLevelService,
 
-    private readonly subscriptionController: GoHighLevelPayOSSubscriptionsController,
+    private readonly subscriptionService: GoHighLevelPayOSSubscriptionsService,
 
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
@@ -145,7 +145,7 @@ export class GoHighLevelPayOSAppsService {
     // check subscription
     let activeSubs = [];
     try {
-      activeSubs = await this.subscriptionController.getActiveSubscription({
+      activeSubs = await this.subscriptionService.getActiveSubscription({
         activeLocation: locationId,
       } as AppInfoDTO);
 
