@@ -23,7 +23,7 @@ import { PlansEntity } from 'src/shared/entities/payos/plan.entity';
 import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { DecryptPayloadSSOKeyGuard } from 'src/shared/guards/DecryptPayloadSSOKey.guard';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
 import { BuyPlanRequestDTO } from './dto/buy-plan-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
@@ -102,6 +102,10 @@ export class GoHighLevelPayOSPlansController {
       where: {
         locationId: order.locationId,
         planId: get(order.params, 'planId'),
+        /**
+         * Có tồn tại sub chưa hết hạn thì mới cộng dồn
+         */
+        endDate: MoreThanOrEqual(dayjs().tz(TIMEZONE).toDate()),
       },
       order: {
         endDate: 'DESC',
@@ -112,9 +116,11 @@ export class GoHighLevelPayOSPlansController {
         startDate: dayjs(findLatestSub.endDate)
           .tz(TIMEZONE)
           .add(1, 'second')
+          .startOf('date')
           .toDate(),
         endDate: dayjs(findLatestSub.endDate)
           .tz(TIMEZONE)
+          .add(1, 'second')
           .add(1, 'months')
           .endOf('date')
           .toDate(),
