@@ -9,6 +9,7 @@ import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity'
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
 import { GoHighLevelPayOSSubscriptionsController } from '../subscriptions/subscriptions.controller';
 import { GoHighLevelPayOSAppsController } from './apps.controller';
+import { GoHighLevelPayOSAppsService } from './apps.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature(
@@ -23,7 +24,11 @@ import { GoHighLevelPayOSAppsController } from './apps.controller';
     ),
   ],
   controllers: [GoHighLevelPayOSAppsController],
-  providers: [GoHighLevelService, GoHighLevelPayOSSubscriptionsController],
+  providers: [
+    GoHighLevelService,
+    GoHighLevelPayOSAppsService,
+    GoHighLevelPayOSSubscriptionsController,
+  ],
   exports: [TypeOrmModule],
 })
 export class GoHighLevelPayOSAppsModule {}
