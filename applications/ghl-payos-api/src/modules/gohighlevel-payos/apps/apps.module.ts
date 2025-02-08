@@ -7,8 +7,9 @@ import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
 import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
-import { GoHighLevelPayOSSubscriptionsController } from '../subscriptions/subscriptions.controller';
+import { GoHighLevelPayOSSubscriptionsService } from '../subscriptions/subscriptions.service';
 import { GoHighLevelPayOSAppsController } from './apps.controller';
+import { GoHighLevelPayOSAppsService } from './apps.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature(
@@ -23,7 +24,11 @@ import { GoHighLevelPayOSAppsController } from './apps.controller';
     ),
   ],
   controllers: [GoHighLevelPayOSAppsController],
-  providers: [GoHighLevelService, GoHighLevelPayOSSubscriptionsController],
+  providers: [
+    GoHighLevelService,
+    GoHighLevelPayOSAppsService,
+    GoHighLevelPayOSSubscriptionsService,
+  ],
   exports: [TypeOrmModule],
 })
 export class GoHighLevelPayOSAppsModule {}

@@ -57,7 +57,7 @@ const PayOSConfig = () => {
       setSubscriptions(infoSub as any);
 
       if (isEmpty(infoSub)) return;
-      const infoGateway = getPaymentGatewayKeys(encryptKey);
+      const infoGateway = await getPaymentGatewayKeys(encryptKey);
 
       form.setFieldsValue(infoGateway as any);
     } catch (error) {
