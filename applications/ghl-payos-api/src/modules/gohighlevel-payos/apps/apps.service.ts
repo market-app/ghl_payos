@@ -20,6 +20,7 @@ import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
+import { BrevoService } from 'src/shared/services/brevo.service';
 import { isValidEmail } from 'src/shared/utils';
 import {
   decrypt,
@@ -37,6 +38,8 @@ import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 export class GoHighLevelPayOSAppsService {
   constructor(
     private readonly ghlService: GoHighLevelService,
+
+    private brevoService: BrevoService,
 
     private readonly subscriptionService: GoHighLevelPayOSSubscriptionsService,
 
@@ -157,34 +160,16 @@ export class GoHighLevelPayOSAppsService {
             'Không thể gửi mail do không đúng định dạng',
           );
         }
-        await axios.post(
-          'https://api.mailersend.com/v1/email',
-          {
-            from: {
-              email: 'no-reply@hieunt.org',
-            },
-            to: [
-              {
-                email,
-              },
-            ],
-            template_id: '0p7kx4xo6km49yjr',
-            personalization: [
-              {
-                email,
-                data: {
-                  email,
-                  expirationDate: dayjs().format('DD/MM/YYYY'),
-                },
-              },
-            ],
+
+        await this.brevoService.sendMailWithTemplate({
+          locationId,
+          email,
+          params: {
+            email,
+            expirationDate: dayjs().format('DD/MM/YYYY'),
           },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.MAILER_SEND_API_KEY || ''}`,
-            },
-          },
-        );
+          templateId: Number(process.env.BREVO_TEMPLATE_ID_EXTEND_SUBSCRIPTION),
+        });
         throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
       }
     } catch (error) {
