@@ -7,6 +7,7 @@ import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
 import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
+import { BrevoService } from 'src/shared/services/brevo.service';
 import { GoHighLevelPayOSSubscriptionsService } from '../subscriptions/subscriptions.service';
 import { GoHighLevelPayOSAppsController } from './apps.controller';
 import { GoHighLevelPayOSAppsService } from './apps.service';
@@ -28,6 +29,7 @@ import { GoHighLevelPayOSAppsService } from './apps.service';
     GoHighLevelService,
     GoHighLevelPayOSAppsService,
     GoHighLevelPayOSSubscriptionsService,
+    BrevoService,
   ],
   exports: [TypeOrmModule],
 })

@@ -12,6 +12,7 @@ import { get, isEmpty } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { AuthTokenHeaderGuard } from 'src/shared/guards/AuthTokenHeader.guard';
+import { BrevoService } from 'src/shared/services/brevo.service';
 import { isValidEmail } from 'src/shared/utils';
 import { Repository } from 'typeorm';
 import { AppInfoDTO } from '../gohighlevel-payos/apps/dto/app-info.dto';
@@ -20,6 +21,8 @@ import { GoHighLevelPayOSSubscriptionsService } from '../gohighlevel-payos/subsc
 @Controller('send-emails')
 export class SendEmailsController {
   constructor(
+    private brevoService: BrevoService,
+
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
 
@@ -66,34 +69,15 @@ export class SendEmailsController {
           : activeApp.email;
 
       if (!isTesting) {
-        await axios.post(
-          'https://api.mailersend.com/v1/email',
-          {
-            from: {
-              email: 'no-reply@hieunt.org',
-            },
-            to: [
-              {
-                email: newRecipient,
-              },
-            ],
-            template_id: '0p7kx4xo6km49yjr',
-            personalization: [
-              {
-                email: newRecipient,
-                data: {
-                  email: newRecipient,
-                  expirationDate: dayjs().format('DD/MM/YYYY'),
-                },
-              },
-            ],
+        await this.brevoService.sendMailWithTemplate({
+          params: {
+            email: newRecipient,
+            expirationDate: dayjs().format('DD/MM/YYYY'),
           },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.MAILER_SEND_API_KEY || ''}`,
-            },
-          },
-        );
+          locationId: activeApp.locationId,
+          email: newRecipient,
+          templateId: Number(process.env.BREVO_TEMPLATE_ID_EXTEND_SUBSCRIPTION),
+        });
       }
     }
 
