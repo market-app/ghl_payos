@@ -28,6 +28,12 @@ const ProcessBuyPlan = ({ payload }: IProps) => {
         Chúng tôi không tìm thấy lịch sử mua gói của bạn trên GoHighLevel, nếu bạn đã mua gói rồi xin liên hệ admin để
         được hỗ trợ, nếu chưa mua gói vui lòng mua gói để có thể sử dụng được app.
       </Typography.Text>
+      <br />
+      <br />
+      <Typography.Text type='warning'>
+        Lưu ý: Hiện tại chúng tôi đã cho dùng thử 7 ngày đối với các tài khoản mới và chưa từng mua gói, nếu bạn thuộc
+        trường hợp trên và chưa nhận được gói miễn phí, hãy thẻ xoá và cài đặt lại app
+      </Typography.Text>
       <div style={{ marginTop: '40px' }}>
         <Typography.Title level={5}>Thông tin gói:</Typography.Title>
         <Divider />
