@@ -1,8 +1,15 @@
 import { Get, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import dayjs from 'dayjs';
 import { PPayOS_DB } from 'src/config';
-import { ENUM_PAYOS_APP_STATE } from 'src/shared/constants/payos.constant';
+import {
+  ENUM_CREATED_BY_DEFAULT,
+  ENUM_PAYOS_APP_STATE,
+  TIMEZONE,
+} from 'src/shared/constants/payos.constant';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
+import { PlansEntity } from 'src/shared/entities/payos/plan.entity';
+import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
 import { Repository } from 'typeorm';
 
@@ -12,6 +19,12 @@ export class GoHighLevelPayOSAuthenticationService {
 
     @InjectRepository(AppsEntity, PPayOS_DB)
     private appsRepository: Repository<AppsEntity>,
+
+    @InjectRepository(SubscriptionsEntity, PPayOS_DB)
+    private subscriptionsRepository: Repository<SubscriptionsEntity>,
+
+    @InjectRepository(PlansEntity, PPayOS_DB)
+    private plansRepository: Repository<PlansEntity>,
   ) {}
 
   @Get()
@@ -54,8 +67,37 @@ export class GoHighLevelPayOSAuthenticationService {
         locationId: infoApp.locationId,
         accessToken: infoApp.access_token,
       });
+      const messageResponseDefault =
+        'Xác thực thành công, bạn có thể tắt tab này và tiếp tục sử dụng.';
 
-      return 'Xác thực thành công, bạn có thể tắt tab này và tiếp tục sử dụng.';
+      // add free subscription
+      const hasSubscription = await this.subscriptionsRepository.findOne({
+        where: {
+          locationId: infoApp.locationId,
+        },
+      });
+      if (hasSubscription) {
+        return messageResponseDefault;
+      }
+      const freePlan = await this.plansRepository.findOne({
+        where: {
+          amount: 0,
+        },
+      });
+      if (!freePlan) return messageResponseDefault;
+
+      await this.subscriptionsRepository.save({
+        planId: freePlan.id,
+        locationId: infoApp.locationId,
+        startDate: dayjs().tz(TIMEZONE).startOf('date'),
+        endDate: dayjs()
+          .tz(TIMEZONE)
+          .add(freePlan.duration, freePlan.durationType as any)
+          .endOf('date'),
+        createdAt: new Date(),
+        createdBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
+      });
+      return messageResponseDefault;
     } catch (error) {
       return `Có lỗi xảy ra, vui lòng liên hệ hieunt0303@gmail.com để được hỗ trợ`;
     }
