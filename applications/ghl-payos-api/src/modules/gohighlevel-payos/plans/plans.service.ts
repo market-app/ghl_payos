@@ -146,7 +146,7 @@ export class GoHighLevelPayOSPlansService {
     }
     const plan = await this.planRepository.findOne({
       where: {
-        durationType: ENUM_PLAN_DURATION_TYPE.MONTHLY,
+        durationType: ENUM_PLAN_DURATION_TYPE.MONTH,
       },
     });
     if (!plan) {

@@ -31,6 +31,12 @@ export class PlansEntity {
   amount: number;
 
   @Column({
+    type: 'integer',
+    nullable: false,
+  })
+  duration: number;
+
+  @Column({
     name: 'duration_type',
     type: 'varchar',
     length: 50,

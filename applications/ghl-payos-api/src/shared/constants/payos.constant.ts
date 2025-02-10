@@ -43,5 +43,6 @@ export enum ENUM_ORDER_STATUS {
 }
 
 export enum ENUM_PLAN_DURATION_TYPE {
-  MONTHLY = 'monthly',
+  MONTH = 'month',
+  DAY = 'day',
 }
