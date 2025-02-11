@@ -18,7 +18,7 @@ export class BrevoService {
     email,
     templateId,
   }: {
-    params: Record<string, any>;
+    params?: Record<string, any>;
     locationId: string;
     email: string;
     templateId: number;
