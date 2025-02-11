@@ -102,23 +102,30 @@ export class SendEmailsController {
     if (isEmpty(activeApps)) {
       throw new BadRequestException('Not found active user');
     }
+    const response: any = [];
 
     for (const activeApp of activeApps) {
       if (!isValidEmail(activeApp.email)) continue;
+      response.push(activeApp);
+
       const newRecipient =
         process.env.APP_ENV === 'development'
           ? 'bibi030301@gmail.com'
           : activeApp.email;
 
       if (!isTesting) {
-        await this.brevoService.sendMailWithTemplate({
-          locationId: activeApp.locationId,
-          email: newRecipient,
-          templateId,
-          params: {},
-        });
+        try {
+          await this.brevoService.sendMailWithTemplate({
+            locationId: activeApp.locationId,
+            email: newRecipient,
+            templateId,
+            // params: {},
+          });
+        } catch (error) {
+          throw error;
+        }
       }
     }
-    return true;
+    return response;
   }
 }
