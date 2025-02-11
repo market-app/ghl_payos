@@ -51,6 +51,12 @@ export class GoHighLevelPayOSAppsController {
     return this.ghlPayOSAppService.getPaymentGatewayKeys(appInfo);
   }
 
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
   @Post('payment-link')
   async createPaymentLink(
     @Body() body: CreatePaymentLinkRequestDTO,
