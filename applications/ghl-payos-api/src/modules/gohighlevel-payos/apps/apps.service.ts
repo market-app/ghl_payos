@@ -36,7 +36,6 @@ import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.d
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 import TelegramBot from 'node-telegram-bot-api';
-import { stringify } from 'querystring';
 
 export class GoHighLevelPayOSAppsService {
   constructor(
@@ -169,7 +168,7 @@ export class GoHighLevelPayOSAppsService {
       throw new BadRequestException('App not found');
     }
     const orderCode = dayjs().unix();
-    const description = get(body, 'description', '');
+    const description = get(body, 'description', 'thanh toan');
     let orderId;
     // check subscription
     let activeSubs = [];

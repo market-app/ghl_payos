@@ -9,11 +9,11 @@ import {
 
 export class CreatePaymentLinkRequestDTO {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   locationId: string;
 
   @IsPositive()
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => Number(value))
   amount: number;
 
