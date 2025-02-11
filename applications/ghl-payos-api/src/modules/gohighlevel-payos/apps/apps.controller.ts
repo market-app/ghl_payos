@@ -54,6 +54,7 @@ export class GoHighLevelPayOSAppsController {
   @UsePipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: false,
     }),
   )
   @Post('payment-link')
