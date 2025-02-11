@@ -83,4 +83,42 @@ export class SendEmailsController {
 
     return response;
   }
+
+  @UseGuards(AuthTokenHeaderGuard)
+  @Post('notification')
+  async sendMailForAllUserByTemplateId(@Body() body): Promise<any> {
+    const isTesting = get(body, 'isTesting', true);
+    const templateId = get(body, 'templateId');
+    if (!templateId) {
+      throw new BadRequestException('templateId is missing');
+    }
+
+    const activeApps: AppsEntity[] = await this.appsRepository
+      .createQueryBuilder('app')
+      .select(['app.email', 'app.locationId'])
+      .where('app.email is not null')
+      .getMany();
+
+    if (isEmpty(activeApps)) {
+      throw new BadRequestException('Not found active user');
+    }
+
+    for (const activeApp of activeApps) {
+      if (!isValidEmail(activeApp.email)) continue;
+      const newRecipient =
+        process.env.APP_ENV === 'development'
+          ? 'bibi030301@gmail.com'
+          : activeApp.email;
+
+      if (!isTesting) {
+        await this.brevoService.sendMailWithTemplate({
+          locationId: activeApp.locationId,
+          email: newRecipient,
+          templateId,
+          params: {},
+        });
+      }
+    }
+    return true;
+  }
 }
