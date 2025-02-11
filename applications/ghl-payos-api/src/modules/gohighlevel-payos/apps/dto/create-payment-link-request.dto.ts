@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class CreatePaymentLinkRequestDTO {
@@ -7,6 +8,7 @@ export class CreatePaymentLinkRequestDTO {
 
   @IsPositive()
   @IsNotEmpty()
+  @Transform(({ value }) => Number(value))
   amount: number;
 
   @IsString()
