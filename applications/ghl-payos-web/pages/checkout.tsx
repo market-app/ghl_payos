@@ -1,11 +1,12 @@
+import { notification } from 'antd';
 import { createPaymentLink } from 'apis';
 import { get } from 'lodash';
 import { usePayOS } from 'payos-checkout';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 const Checkout = () => {
   const PAYOS_IFRAME_ELEMENT_ID = 'payos_checkout_url';
-  const [error, setError] = useState(null);
+
   const openIframePayOS = (checkoutUrl: string) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const { open } = usePayOS({
@@ -38,12 +39,21 @@ const Checkout = () => {
       amount,
       transactionId,
       redirectUri: window.location.href,
+      params: {
+        data,
+      },
     })
       .then((res) => {
         openIframePayOS(res as any);
       })
       .catch((err) => {
-        setError(get(err, 'response.data.message', 'Có lỗi xảy ra khi tạo link thanh toán'));
+        notification.error({
+          message: 'Có lỗi xảy ra khi tạo link thanh toán',
+          description: get(err, 'response.data.message'),
+        });
+        setTimeout(() => {
+          window.parent.postMessage(JSON.stringify({ type: 'custom_element_close_response' }), '*');
+        }, 3000);
       });
   };
 
@@ -60,7 +70,6 @@ const Checkout = () => {
   return (
     <div className='bg-transparent'>
       <div id={PAYOS_IFRAME_ELEMENT_ID}></div>
-      {error && <div className='loading-page'>{error}</div>}
     </div>
   );
 };

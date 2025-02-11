@@ -17,6 +17,7 @@ import {
 } from 'src/shared/constants/payos.constant';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
+import { HistoryRequestsEntity } from 'src/shared/entities/payos/histoty-request.entity';
 import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
@@ -34,6 +35,8 @@ import { AppInfoDTO } from './dto/app-info.dto';
 import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
+import TelegramBot from 'node-telegram-bot-api';
+import { stringify } from 'querystring';
 
 export class GoHighLevelPayOSAppsService {
   constructor(
@@ -51,6 +54,9 @@ export class GoHighLevelPayOSAppsService {
 
     @InjectRepository(OrdersEntity, PPayOS_DB)
     private ordersRepository: Repository<OrdersEntity>,
+
+    @InjectRepository(HistoryRequestsEntity, PPayOS_DB)
+    private historyRequestsRepository: Repository<HistoryRequestsEntity>,
   ) {}
 
   async updatePaymentGatewayKey(
@@ -133,7 +139,27 @@ export class GoHighLevelPayOSAppsService {
   async createPaymentLink(
     @Body() body: CreatePaymentLinkRequestDTO,
   ): Promise<string> {
-    const { amount, transactionId, locationId, redirectUri } = body;
+    const { amount, transactionId, locationId, redirectUri, params } = body;
+
+    await this.historyRequestsRepository.save({
+      createdAt: new Date(),
+      createdBy: 'system',
+      method: 'post',
+      params,
+      appName: 'ghl-payos',
+      url: 'payment-link',
+      request: {},
+    });
+    if (!amount || !locationId) {
+      const bot = new TelegramBot(process.env.TELEGRAM_NOTI_BOT_TOKEN || '');
+      bot.sendMessage(
+        process.env.TELEGRAM_NOTI_CHAT_ID || '',
+        JSON.stringify(params) || 'demo',
+      );
+      throw new BadRequestException(
+        'Không đủ thông tin để tạo link thanh toán, vui lòng thử lại',
+      );
+    }
     const app = await this.appsRepository.findOne({
       where: {
         locationId,
@@ -143,7 +169,7 @@ export class GoHighLevelPayOSAppsService {
       throw new BadRequestException('App not found');
     }
     const orderCode = dayjs().unix();
-    const description = get(body, 'description') || transactionId;
+    const description = get(body, 'description', '');
     let orderId;
     // check subscription
     let activeSubs = [];
