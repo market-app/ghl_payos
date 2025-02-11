@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsPositive, IsString } from 'class-validator';
+import {
+  IsDefined,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
 export class CreatePaymentLinkRequestDTO {
   @IsString()
@@ -22,4 +28,7 @@ export class CreatePaymentLinkRequestDTO {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsOptional()
+  params: Record<string, any>;
 }
