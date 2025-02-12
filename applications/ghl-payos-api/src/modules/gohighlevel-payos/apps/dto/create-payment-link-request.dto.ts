@@ -18,7 +18,7 @@ export class CreatePaymentLinkRequestDTO {
   amount: number;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   transactionId: string;
 
   @IsString()
