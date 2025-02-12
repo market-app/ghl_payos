@@ -36,6 +36,7 @@ import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.d
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 import TelegramBot from 'node-telegram-bot-api';
+import { parseErrorToJson } from 'src/shared/utils/handle-error';
 
 export class GoHighLevelPayOSAppsService {
   constructor(
@@ -167,9 +168,7 @@ export class GoHighLevelPayOSAppsService {
     if (!app) {
       throw new BadRequestException('App not found');
     }
-    const orderCode = dayjs().unix();
-    const description = get(body, 'description', 'thanh toan');
-    let orderId;
+
     // check subscription
     let activeSubs = [];
     try {
@@ -202,6 +201,31 @@ export class GoHighLevelPayOSAppsService {
       throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
     }
 
+    const orderCode = dayjs().unix();
+    let description = 'thanh toan don hang';
+    const orderIdGhl = body.orderId;
+    //#region use name product to description
+    try {
+      if (orderIdGhl) {
+        const ghlOrderInfo = await this.ghlService.getOrderById({
+          locationId,
+          expireIn: app.expiresIn,
+          latestUpdateToken: app.latestUpdateToken,
+          orderId: orderIdGhl,
+          accessToken: app.accessToken,
+        });
+
+        const productName = String(
+          get(ghlOrderInfo, 'items[0].name', ''),
+        ).slice(0, 8);
+
+        description = productName;
+      }
+    } catch (error) {
+      console.log(parseErrorToJson(error));
+    }
+
+    let orderId;
     try {
       const order = await this.ordersRepository.save({
         amount,

@@ -33,11 +33,12 @@ const Checkout = () => {
     const paymentInfo = JSON.parse(data);
     window.removeEventListener('message', handleMessage);
 
-    const { locationId, amount, transactionId } = paymentInfo;
+    const { locationId, amount, transactionId, orderId } = paymentInfo;
     createPaymentLink({
       locationId,
       amount,
       transactionId,
+      orderId,
       redirectUri: window.location.href,
       params: {
         data,
