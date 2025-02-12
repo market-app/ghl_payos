@@ -204,6 +204,51 @@ export class GoHighLevelService {
     }
   }
 
+  async getOrderById({
+    locationId,
+    accessToken,
+    expireIn,
+    latestUpdateToken,
+    orderId,
+  }: {
+    expireIn: number;
+    latestUpdateToken: Date;
+    locationId: string;
+    accessToken: string;
+    orderId: string;
+  }): Promise<any> {
+    let newAccessToken = accessToken;
+    try {
+      const isExpired = isTokenExpired(latestUpdateToken, expireIn);
+      if (isExpired) {
+        newAccessToken = await this.handleUpdateAccessToken({
+          locationId,
+          accessToken,
+        });
+      }
+
+      const response = await ghlApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })(`/payments/orders/${orderId}`, {
+        method: 'get',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${newAccessToken}`,
+          Version: process.env.GHL_VERSION || '',
+        },
+        params: {
+          locationId,
+          altId: locationId,
+          altType: 'location',
+        },
+      }).then((res) => res.data);
+      return response;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
   async createProviderConfig({
     locationId,
     accessToken,

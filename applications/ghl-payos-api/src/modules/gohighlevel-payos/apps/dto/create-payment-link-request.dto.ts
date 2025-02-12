@@ -12,6 +12,10 @@ export class CreatePaymentLinkRequestDTO {
   @IsOptional()
   locationId: string;
 
+  @IsString()
+  @IsOptional()
+  orderId: string;
+
   @IsPositive()
   @IsOptional()
   @Transform(({ value }) => Number(value))
