@@ -217,7 +217,7 @@ export class GoHighLevelPayOSAppsService {
 
         const productName = String(
           get(ghlOrderInfo, 'items[0].name', ''),
-        ).slice(0, 8);
+        ).slice(0, 20);
 
         description = productName;
       }
