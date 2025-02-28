@@ -25,7 +25,7 @@ const ProcessBuyPlan = ({ payload }: IProps) => {
   return (
     <>
       <Typography.Text type='danger'>
-        Chúng tôi không tìm thấy lịch sử mua gói của bạn trên GoHighLevel, nếu bạn đã mua gói rồi xin liên hệ admin để
+        Chúng tôi không tìm thấy lịch sử mua gói của bạn, <i>nếu bạn đã mua gói rồi hoặc vấn đề về kích hoạt gói hãy liên hệ zalo: 0867600311</i> để
         được hỗ trợ, nếu chưa mua gói vui lòng mua gói để có thể sử dụng được app.
       </Typography.Text>
       <br />
