@@ -64,8 +64,8 @@ const ProcessBuyPlan = () => {
       <br />
       <Typography.Text type='warning'>
         Lưu ý: Hiện tại chúng tôi đã cho dùng thử 7 ngày đối với các tài khoản mới và chưa từng mua gói, nếu bạn thuộc
-        trường hợp trên và chưa nhận được gói miễn phí, hãy thẻ xoá và cài đặt lại app. Các gói bên dưới có thể mua cộng
-        dồn, nếu bạn đã có gói sẵn thì gói tiếp theo sẽ được tính từ ngày gói hiện tại của bạn kết thúc.
+        trường hợp trên và chưa nhận được gói miễn phí, hãy thử xoá và cài đặt lại app. Các gói bên dưới có thể mua cộng
+        dồn, nếu bạn đã có gói sẵn thì gói tiếp theo sẽ được tính từ ngày gói gần nhất của bạn kết thúc.
       </Typography.Text>
       <div style={{ marginTop: '40px' }}>
         <Typography.Title level={5}>Thông tin gói:</Typography.Title>
