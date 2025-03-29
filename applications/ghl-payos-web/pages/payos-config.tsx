@@ -1,13 +1,14 @@
 import { Button, Divider, Form, Input, notification, Typography } from 'antd';
 import { getActiveSubscription, getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
 import LoadingPage from 'components/LoadingPage';
-import ProcessBuyPlan from 'components/ProcessBuyPlan';
 import SubscriptionDetail from 'components/SubscriptionDetail';
 import { get, isEmpty } from 'lodash';
+import { Router, useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { IPayOSPaymentGatewayKey } from 'types';
 
 const PayOSConfig = () => {
+  const router = useRouter();
   const [form] = Form.useForm<IPayOSPaymentGatewayKey>();
   const [payload, setPayload] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -82,7 +83,8 @@ const PayOSConfig = () => {
   }
 
   if (isEmpty(subscriptions)) {
-    return <ProcessBuyPlan payload={payload} />;
+    router.push(`/buy-plan?payload=${encodeURIComponent(payload)}`);
+    return;
   }
 
   return (

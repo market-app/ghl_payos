@@ -1,8 +1,7 @@
-import { Button, notification, Tooltip, Typography } from 'antd';
-import { buyPlanByLocation } from 'apis';
-import { ERROR_MESSAGE_DEFAULT } from '../constants';
+import { Button, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { get } from 'lodash';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 interface IProps {
@@ -14,23 +13,12 @@ interface IProps {
   payload: string;
 }
 const SubscriptionDetail = ({ subscriptions, payload }: IProps) => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const buyPlan = () => {
     setLoading(true);
-    buyPlanByLocation(payload)
-      .then((res) => {
-        window.open(get(res, 'checkoutUrl', ''), '_blank');
-      })
-      .catch((err) => {
-        notification.error({
-          message: get(err, 'response.data.message', ERROR_MESSAGE_DEFAULT),
-        });
-        console.log(err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    router.push(`/buy-plan?payload=${encodeURIComponent(payload)}`);
   };
 
   return (

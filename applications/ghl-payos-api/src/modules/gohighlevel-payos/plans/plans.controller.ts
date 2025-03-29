@@ -1,5 +1,6 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
+import { PlansEntity } from 'src/shared/entities/payos/plan.entity';
 import { DecryptPayloadSSOKeyGuard } from 'src/shared/guards/DecryptPayloadSSOKey.guard';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
 import { BuyPlanRequestDTO } from './dto/buy-plan-request.dto';
@@ -22,5 +23,13 @@ export class GoHighLevelPayOSPlansController {
     @Body() body: BuyPlanRequestDTO,
   ): Promise<any> {
     return this.planService.buyPlan(appInfo, body);
+  }
+
+  @UseGuards(DecryptPayloadSSOKeyGuard)
+  @Get()
+  async getPlans(
+    @RequestAppInfo() appInfo: AppInfoDTO,
+  ): Promise<PlansEntity[]> {
+    return this.planService.getPlans(appInfo);
   }
 }
