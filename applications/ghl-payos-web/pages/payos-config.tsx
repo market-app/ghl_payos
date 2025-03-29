@@ -1,7 +1,6 @@
 import { Button, Divider, Form, Input, notification, Typography } from 'antd';
 import { getActiveSubscription, getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
 import LoadingPage from 'components/LoadingPage';
-import ProcessBuyPlan from 'components/ProcessBuyPlan';
 import SubscriptionDetail from 'components/SubscriptionDetail';
 import { get, isEmpty } from 'lodash';
 import { useEffect, useState } from 'react';
@@ -82,7 +81,7 @@ const PayOSConfig = () => {
   }
 
   if (isEmpty(subscriptions)) {
-    return <ProcessBuyPlan payload={payload} />;
+    // return <ProcessBuyPlan payload={payload} />;
   }
 
   return (

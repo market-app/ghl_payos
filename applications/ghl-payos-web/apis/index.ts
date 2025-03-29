@@ -36,11 +36,21 @@ export const getActiveSubscription = (payload: string) => {
   });
 };
 
-export const buyPlanByLocation = (payload: string) => {
+export const getPlans = (payload: string) => {
+  return axiosPayOS()('/api/payos/plans', {
+    method: 'get',
+    headers: {
+      'x-sso-payload': payload,
+    },
+  });
+};
+
+export const buyPlanByLocation = (payload: string, planId: number) => {
   return axiosPayOS()('/api/payos/plans', {
     method: 'post',
     data: {
       redirectUri: `${window.location.href}/payment-success`,
+      planId,
     },
     headers: {
       'x-sso-payload': payload,

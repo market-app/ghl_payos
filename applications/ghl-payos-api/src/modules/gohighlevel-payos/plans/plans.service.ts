@@ -1,4 +1,4 @@
-import { BadRequestException, Body } from '@nestjs/common';
+import { BadRequestException, Body, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PayOS from '@payos/node';
 import dayjs from 'dayjs';
@@ -85,9 +85,24 @@ export class GoHighLevelPayOSPlansService {
         locationId: order.locationId,
       },
     );
+    const planId = get(order, 'params.planId');
+    if (!planId) {
+      throw new NotFoundException('Không thấy thông tin order plan');
+    }
+    const plan = await this.planRepository.findOne({
+      id: Number(planId),
+    });
+    if (!plan) {
+      throw new NotFoundException('plan not found');
+    }
+
     let duration = {
       startDate: dayjs().tz(TIMEZONE).startOf('date').toDate(),
-      endDate: dayjs().tz(TIMEZONE).add(1, 'months').endOf('date').toDate(),
+      endDate: dayjs()
+        .tz(TIMEZONE)
+        .add(plan.duration, plan.durationType as any)
+        .endOf('date')
+        .toDate(),
     };
     const findLatestSub = await this.subscriptionsRepository.findOne({
       where: {
@@ -112,7 +127,7 @@ export class GoHighLevelPayOSPlansService {
         endDate: dayjs(findLatestSub.endDate)
           .tz(TIMEZONE)
           .add(1, 'second')
-          .add(1, 'months')
+          .add(plan.duration, plan.durationType as any)
           .endOf('date')
           .toDate(),
       };
@@ -146,11 +161,14 @@ export class GoHighLevelPayOSPlansService {
     }
     const plan = await this.planRepository.findOne({
       where: {
-        durationType: ENUM_PLAN_DURATION_TYPE.MONTH,
+        id: Number(body.planId),
       },
     });
     if (!plan) {
       throw new BadRequestException('Không tìm thấy gói');
+    }
+    if (!plan.amount) {
+      throw new BadRequestException('Bạn không thể mua gói này');
     }
     const payOS = new PayOS(
       process.env.PAYOS_SUBSCRIPTION_CLIENT_ID || '',
@@ -184,5 +202,12 @@ export class GoHighLevelPayOSPlansService {
     return {
       checkoutUrl: paymentLink.checkoutUrl,
     };
+  }
+
+  async getPlans(
+    @RequestAppInfo() appInfo: AppInfoDTO,
+  ): Promise<PlansEntity[]> {
+    const plans = await this.planRepository.find({});
+    return plans;
   }
 }
