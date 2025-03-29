@@ -1,10 +1,10 @@
 import { BadRequestException, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PayOS from '@payos/node';
-import axios from 'axios';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
 import { get, isEmpty } from 'lodash';
+import TelegramBot from 'node-telegram-bot-api';
 import { PPayOS_DB } from 'src/config';
 import {
   ENUM_CREATED_BY_DEFAULT,
@@ -29,14 +29,14 @@ import {
   formatKeysToDecrypt,
   formatKeysToEncrypt,
 } from 'src/shared/utils/encrypt';
+import { parseErrorToJson } from 'src/shared/utils/handle-error';
 import { Repository } from 'typeorm';
 import { GoHighLevelPayOSSubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AppInfoDTO } from './dto/app-info.dto';
 import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
+import { CreatePaymentLinkResponseDTO } from './dto/create-payment-link-response.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
-import TelegramBot from 'node-telegram-bot-api';
-import { parseErrorToJson } from 'src/shared/utils/handle-error';
 
 export class GoHighLevelPayOSAppsService {
   constructor(
@@ -138,7 +138,7 @@ export class GoHighLevelPayOSAppsService {
 
   async createPaymentLink(
     @Body() body: CreatePaymentLinkRequestDTO,
-  ): Promise<string> {
+  ): Promise<CreatePaymentLinkResponseDTO> {
     const { amount, transactionId, locationId, redirectUri, params } = body;
 
     await this.historyRequestsRepository.save({
@@ -150,7 +150,7 @@ export class GoHighLevelPayOSAppsService {
       url: 'payment-link',
       request: {},
     });
-    if (!amount || !locationId) {
+    if (!locationId || !transactionId) {
       const bot = new TelegramBot(process.env.TELEGRAM_NOTI_BOT_TOKEN || '');
       bot.sendMessage(
         process.env.TELEGRAM_NOTI_CHAT_ID || '',
@@ -227,7 +227,7 @@ export class GoHighLevelPayOSAppsService {
 
     let orderId;
     try {
-      const order = await this.ordersRepository.save({
+      const orderData = {
         amount,
         transactionId,
         locationId,
@@ -236,7 +236,24 @@ export class GoHighLevelPayOSAppsService {
         createdAt: new Date(),
         createdBy: ENUM_CREATED_BY_DEFAULT.SYSTEM,
         status: ENUM_ORDER_STATUS.NEW,
-      });
+      } as OrdersEntity;
+
+      if (body.amount == 0) {
+        orderData.paymentLinkId = transactionId;
+        orderData.params = {
+          note: 'đơn miễn phí',
+        };
+      }
+      const order = await this.ordersRepository.save(orderData as OrdersEntity);
+
+      /**
+       * return nếu amount = 0 (đơn miễn phí)
+       */
+      if (body.amount == 0) {
+        return {
+          oderStatus: orderData.status,
+        };
+      }
       orderId = order.id;
 
       const providerConfig = await this.getPaymentGatewayKeys({
@@ -275,7 +292,10 @@ export class GoHighLevelPayOSAppsService {
           updatedBy: ENUM_CREATED_BY_DEFAULT.PAYOS_SYSTEM,
         },
       );
-      return paymentLink.checkoutUrl;
+      return {
+        checkoutUrl: paymentLink.checkoutUrl,
+        oderStatus: orderData.status,
+      };
     } catch (error) {
       if (orderId) {
         await this.ordersRepository
@@ -377,14 +397,38 @@ export class GoHighLevelPayOSAppsService {
     if (type !== ENUM_VERIFY_PAYMENT_TYPE.VERIFY || !decryptKeys) {
       return 'Không handle case này';
     }
-    const paymentGatewayKeys = formatKeysToDecrypt(decryptKeys);
-    const payOS = new PayOS(
-      get(paymentGatewayKeys, 'clientId'),
-      get(paymentGatewayKeys, 'apiKey'),
-      get(paymentGatewayKeys, 'checksumKey'),
-      process.env.PAYOS_PARTNER_CODE,
-    );
     try {
+      const order = await this.ordersRepository.findOne({
+        where: {
+          paymentLinkId: chargeId,
+          status: ENUM_ORDER_STATUS.NEW,
+        },
+      });
+      if (!order) {
+        throw new BadRequestException('order not found');
+      }
+      if (order.amount == 0) {
+        await this.ordersRepository.update(
+          {
+            id: order.id,
+          },
+          {
+            status: ENUM_ORDER_STATUS.PAID,
+            updatedAt: new Date(),
+            updatedBy: ENUM_CREATED_BY_DEFAULT.GHL_SYSTEM,
+          },
+        );
+        return {
+          success: true,
+        };
+      }
+      const paymentGatewayKeys = formatKeysToDecrypt(decryptKeys);
+      const payOS = new PayOS(
+        get(paymentGatewayKeys, 'clientId'),
+        get(paymentGatewayKeys, 'apiKey'),
+        get(paymentGatewayKeys, 'checksumKey'),
+        process.env.PAYOS_PARTNER_CODE,
+      );
       const paymentInfo = await payOS.getPaymentLinkInformation(chargeId);
       if (paymentInfo.status === ENUM_PAYOS_PAYMENT_STATUS.PAID) {
         //update status order

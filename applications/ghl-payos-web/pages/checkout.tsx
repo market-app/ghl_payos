@@ -45,7 +45,11 @@ const Checkout = () => {
       },
     })
       .then((res) => {
-        openIframePayOS(res as any);
+        if (amount == 0) {
+          window.parent.postMessage(JSON.stringify({ type: 'custom_element_success_response', chargeId: transactionId }), '*');
+          return;
+        }
+        openIframePayOS(get(res, 'checkoutUrl', ''));
       })
       .catch((err) => {
         notification.error({

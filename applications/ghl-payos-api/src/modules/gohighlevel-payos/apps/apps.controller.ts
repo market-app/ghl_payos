@@ -13,6 +13,7 @@ import { DecryptPayloadSSOKeyGuard } from 'src/shared/guards/DecryptPayloadSSOKe
 import { GoHighLevelPayOSAppsService } from './apps.service';
 import { AppInfoDTO } from './dto/app-info.dto';
 import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
+import { CreatePaymentLinkResponseDTO } from './dto/create-payment-link-response.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 
@@ -60,7 +61,7 @@ export class GoHighLevelPayOSAppsController {
   @Post('payment-link')
   async createPaymentLink(
     @Body() body: CreatePaymentLinkRequestDTO,
-  ): Promise<string> {
+  ): Promise<CreatePaymentLinkResponseDTO> {
     return this.ghlPayOSAppService.createPaymentLink(body);
   }
 
