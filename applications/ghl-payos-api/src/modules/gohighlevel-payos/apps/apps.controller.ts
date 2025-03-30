@@ -15,6 +15,7 @@ import { AppInfoDTO } from './dto/app-info.dto';
 import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
 import { CreatePaymentLinkResponseDTO } from './dto/create-payment-link-response.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
+import { UpdateAppInfoRequestDTO } from './dto/update-app-info-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 
 @Controller('/payos/apps')
@@ -22,6 +23,33 @@ export class GoHighLevelPayOSAppsController {
   constructor(
     private readonly ghlPayOSAppService: GoHighLevelPayOSAppsService,
   ) {}
+
+  @UseGuards(DecryptPayloadSSOKeyGuard)
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
+  @Get('')
+  async getAppInfo(@RequestAppInfo() appInfo: AppInfoDTO): Promise<any> {
+    return this.ghlPayOSAppService.getAppInfo(appInfo);
+  }
+
+  @UseGuards(DecryptPayloadSSOKeyGuard)
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
+  @Post('')
+  async updateAppInfo(
+    @RequestAppInfo() appInfo: AppInfoDTO,
+    @Body() body: UpdateAppInfoRequestDTO,
+  ): Promise<any> {
+    return this.ghlPayOSAppService.updateAppInfo(appInfo, body);
+  }
 
   @UseGuards(DecryptPayloadSSOKeyGuard)
   @UsePipes(

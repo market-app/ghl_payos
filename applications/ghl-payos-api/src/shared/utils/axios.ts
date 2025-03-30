@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { get, set } from 'lodash';
 import { Repository } from 'typeorm';
@@ -59,7 +60,7 @@ export function createAxiosInstance(
           },
         );
       }
-      throw error;
+      throw new BadRequestException(get(error, 'response.data', error));
     },
   );
   return instance;

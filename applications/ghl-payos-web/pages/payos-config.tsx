@@ -1,5 +1,6 @@
 import { Button, Divider, Form, Input, notification, Typography } from 'antd';
 import { getActiveSubscription, getPaymentGatewayKeys, updatePaymentGatewayKeys } from 'apis';
+import CustomerInfo from 'components/CustomerInfo';
 import LoadingPage from 'components/LoadingPage';
 import SubscriptionDetail from 'components/SubscriptionDetail';
 import { get, isEmpty } from 'lodash';
@@ -90,7 +91,7 @@ const PayOSConfig = () => {
   return (
     <div>
       <SubscriptionDetail subscriptions={subscriptions} payload={payload} />
-      <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} style={{ padding: '30px' }}>
+      <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} style={{ marginTop: '30px' }}>
         <div>
           <Typography.Title level={4}>Thông tin cổng thanh toán</Typography.Title>
           <Form.Item name={['clientId']} label='Client Id' rules={[{ required: true, message: 'Bạn chưa điền key' }]}>
@@ -107,7 +108,6 @@ const PayOSConfig = () => {
             <Input.Password />
           </Form.Item>
         </div>
-        <Divider />
         <br />
         <div className='flex justify-end'>
           <Button type='primary' onClick={onSubmit} loading={loadingSubmit}>
@@ -115,6 +115,8 @@ const PayOSConfig = () => {
           </Button>
         </div>
       </Form>
+      <Divider />
+      <CustomerInfo payload={payload}/>
     </div>
   );
 };
