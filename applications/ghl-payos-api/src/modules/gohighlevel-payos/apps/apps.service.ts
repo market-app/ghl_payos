@@ -36,6 +36,7 @@ import { AppInfoDTO } from './dto/app-info.dto';
 import { CreatePaymentLinkRequestDTO } from './dto/create-payment-link-request.dto';
 import { CreatePaymentLinkResponseDTO } from './dto/create-payment-link-response.dto';
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
+import { UpdateAppInfoRequestDTO } from './dto/update-app-info-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
 
 export class GoHighLevelPayOSAppsService {
@@ -59,6 +60,39 @@ export class GoHighLevelPayOSAppsService {
     private historyRequestsRepository: Repository<HistoryRequestsEntity>,
   ) {}
 
+  async getAppInfo(@RequestAppInfo() appInfo: AppInfoDTO): Promise<any> {
+    const app = await this.appsRepository.findOne({
+      where: {
+        locationId: appInfo.activeLocation,
+        companyId: appInfo.companyId,
+        userId: appInfo.userId,
+      },
+    });
+    if (!app) {
+      throw new BadRequestException('Không tìm thấy app');
+    }
+    return {
+      id: app.id,
+      email: app.email,
+    };
+  }
+
+  async updateAppInfo(
+    appInfo: AppInfoDTO,
+    @Body() body: UpdateAppInfoRequestDTO,
+  ): Promise<any> {
+    const app = await this.getAppInfo(appInfo);
+    await this.appsRepository.update(
+      {
+        id: app.id,
+      },
+      {
+        email: body.email,
+      },
+    );
+    return body;
+  }
+
   async updatePaymentGatewayKey(
     @RequestAppInfo() appInfo: AppInfoDTO,
     @Body() body: PaymentGatewayKeyRequestDTO,
@@ -75,15 +109,18 @@ export class GoHighLevelPayOSAppsService {
     if (!app) {
       throw new BadRequestException('Không tìm thấy app');
     }
-    // update email
-    await this.appsRepository.update(
-      {
-        id: app.id,
-      },
-      {
-        email: appInfo.email,
-      },
-    );
+
+    if (!app.email) {
+      // update email
+      await this.appsRepository.update(
+        {
+          id: app.id,
+        },
+        {
+          email: appInfo.email,
+        },
+      );
+    }
 
     const encryptKeys = encrypt(
       formatKeysToEncrypt({ apiKey, clientId, checksumKey }),

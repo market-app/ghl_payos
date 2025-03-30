@@ -1,6 +1,7 @@
 import { Get, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import dayjs from 'dayjs';
+import { get } from 'lodash';
 import { PPayOS_DB } from 'src/config';
 import {
   ENUM_CREATED_BY_DEFAULT,
@@ -11,6 +12,7 @@ import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { PlansEntity } from 'src/shared/entities/payos/plan.entity';
 import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
+import { parseErrorToJson } from 'src/shared/utils/handle-error';
 import { Repository } from 'typeorm';
 
 export class GoHighLevelPayOSAuthenticationService {
@@ -99,6 +101,8 @@ export class GoHighLevelPayOSAuthenticationService {
       });
       return messageResponseDefault;
     } catch (error) {
+      const parseError = parseErrorToJson(error);
+      console.warn(get(parseError, 'response.data', parseError));
       return `Có lỗi xảy ra, vui lòng liên hệ hieunt0303@gmail.com để được hỗ trợ`;
     }
   }

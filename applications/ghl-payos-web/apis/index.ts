@@ -1,6 +1,27 @@
 import { IPayOSPaymentGatewayKey } from 'types';
 import { axiosPayOS } from 'utils/axios';
 
+export const getInfoApp = (payload: string) => {
+  return axiosPayOS()('/api/payos/apps', {
+    method: 'get',
+    headers: {
+      'x-sso-payload': payload,
+    },
+  });
+};
+
+export const updateInfoApp = (payload: string, email: string) => {
+  return axiosPayOS()('/api/payos/apps', {
+    method: 'post',
+    headers: {
+      'x-sso-payload': payload,
+    },
+    data: {
+      email
+    }
+  });
+};
+
 export const updatePaymentGatewayKeys = (keys: IPayOSPaymentGatewayKey, payload: string) => {
   return axiosPayOS()('/api/payos/apps/payment-gateway', {
     data: keys,
