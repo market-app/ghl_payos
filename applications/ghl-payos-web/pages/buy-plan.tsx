@@ -9,7 +9,7 @@ const ProcessBuyPlan = () => {
   const router = useRouter();
   const query = router.query;
 
-  const [payload, setPayload]= useState('')
+  const [payload, setPayload] = useState('');
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState([]);
   const [planSelected, setPlanSelected] = useState(0);
@@ -18,7 +18,12 @@ const ProcessBuyPlan = () => {
     setLoading(true);
     buyPlanByLocation(payload, planSelected)
       .then((res) => {
-        window.open(get(res, 'checkoutUrl', ''), '_blank');
+        const newWindow = window.open(get(res, 'checkoutUrl', ''), '_blank');
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          notification.warning({
+            message: 'Trình duyệt của bạn đang chặn mở tab mới, vui lòng kích hoạt tính năng để tiếp tục mua gói',
+          });
+        }
       })
       .catch((err) => {
         notification.warning({
@@ -33,9 +38,9 @@ const ProcessBuyPlan = () => {
 
   useEffect(() => {
     const payloadData = get(query, 'payload') as string;
-    const decodePayload = decodeURIComponent(payloadData)
-    if(!payloadData) return;
-    setPayload(decodePayload)
+    const decodePayload = decodeURIComponent(payloadData);
+    if (!payloadData) return;
+    setPayload(decodePayload);
 
     const fetchData = async () => {
       getPlans(decodePayload)
