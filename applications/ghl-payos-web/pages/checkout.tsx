@@ -1,11 +1,13 @@
 import { notification } from 'antd';
 import { createPaymentLink } from 'apis';
+import LoadingPage from 'components/LoadingPage';
 import { get } from 'lodash';
 import { usePayOS } from 'payos-checkout';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const Checkout = () => {
   const PAYOS_IFRAME_ELEMENT_ID = 'payos_checkout_url';
+  const [loading, setLoading] = useState(true);
 
   const openIframePayOS = (checkoutUrl: string) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -46,7 +48,10 @@ const Checkout = () => {
     })
       .then((res) => {
         if (amount == 0) {
-          window.parent.postMessage(JSON.stringify({ type: 'custom_element_success_response', chargeId: transactionId }), '*');
+          window.parent.postMessage(
+            JSON.stringify({ type: 'custom_element_success_response', chargeId: transactionId }),
+            '*',
+          );
           return;
         }
         openIframePayOS(get(res, 'checkoutUrl', ''));
@@ -59,6 +64,9 @@ const Checkout = () => {
         setTimeout(() => {
           window.parent.postMessage(JSON.stringify({ type: 'custom_element_close_response' }), '*');
         }, 3000);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -74,6 +82,7 @@ const Checkout = () => {
 
   return (
     <div className='bg-transparent'>
+      {loading && <LoadingPage />}
       <div id={PAYOS_IFRAME_ELEMENT_ID}></div>
     </div>
   );
