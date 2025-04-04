@@ -185,7 +185,7 @@ export class GoHighLevelPayOSAppsService {
       params,
       appName: 'ghl-payos',
       url: 'payment-link',
-      request: {},
+      request: { body },
     });
     if (!locationId || !transactionId) {
       const bot = new TelegramBot(process.env.TELEGRAM_NOTI_BOT_TOKEN || '');
