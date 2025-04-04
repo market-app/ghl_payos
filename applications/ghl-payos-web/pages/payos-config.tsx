@@ -79,13 +79,14 @@ const PayOSConfig = () => {
     };
   }, []);
 
-  if (loading) {
-    return <LoadingPage />;
-  }
+  useEffect(() => {
+    if (isEmpty(subscriptions) && payload && !loading) {
+      router.push(`/buy-plan?payload=${encodeURIComponent(payload)}`);
+    }
+  }, [payload, loading, subscriptions]);
 
-  if (isEmpty(subscriptions)) {
-    router.push(`/buy-plan?payload=${encodeURIComponent(payload)}`);
-    return;
+  if (loading || isEmpty(subscriptions)) {
+    return <LoadingPage />;
   }
 
   return (
@@ -116,7 +117,7 @@ const PayOSConfig = () => {
         </div>
       </Form>
       <Divider />
-      <CustomerInfo payload={payload}/>
+      <CustomerInfo payload={payload} />
     </div>
   );
 };
