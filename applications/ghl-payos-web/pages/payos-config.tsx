@@ -45,7 +45,7 @@ const PayOSConfig = () => {
    * Lấy payload để decrypt ra các thông tin của client
    */
   const handleMessage = async ({ data }: MessageEvent) => {
-    if (data.message !== 'REQUEST_USER_DATA_RESPONSE') {
+    if (get(data,'message') !== 'REQUEST_USER_DATA_RESPONSE') {
       setLoading(false);
       return;
     }

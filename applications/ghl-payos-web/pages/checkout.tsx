@@ -3,7 +3,7 @@ import { createPaymentLink } from 'apis';
 import LoadingPage from 'components/LoadingPage';
 import { get } from 'lodash';
 import { usePayOS } from 'payos-checkout';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 
 const Checkout = () => {
   const PAYOS_IFRAME_ELEMENT_ID = 'payos_checkout_url';
@@ -32,45 +32,48 @@ const Checkout = () => {
   };
 
   const handleMessage = async ({ data }: MessageEvent) => {
-    const paymentInfo = JSON.parse(data);
-    window.removeEventListener('message', handleMessage);
+    try {
+      const paymentInfo = JSON.parse(data);
 
-    const { locationId, amount, transactionId, orderId } = paymentInfo;
-    createPaymentLink({
-      locationId,
-      amount,
-      transactionId,
-      orderId,
-      redirectUri: window.location.href,
-      params: {
-        data,
-      },
-    })
-      .then((res) => {
-        if (amount == 0) {
-          window.parent.postMessage(
-            JSON.stringify({ type: 'custom_element_success_response', chargeId: transactionId }),
-            '*',
-          );
-          return;
-        }
-        openIframePayOS(get(res, 'checkoutUrl', ''));
-      })
-      .catch((err) => {
-        notification.error({
-          message: 'Có lỗi xảy ra khi tạo link thanh toán',
-          description: get(err, 'response.data.message'),
-        });
-        setTimeout(() => {
-          window.parent.postMessage(JSON.stringify({ type: 'custom_element_close_response' }), '*');
-        }, 3000);
-      })
-      .finally(() => {
-        setLoading(false);
+      const { locationId, amount, transactionId, orderId } = paymentInfo;
+      console.log(paymentInfo)
+      // check có data của GHL mới remove  listen message
+      if (locationId && amount && orderId) {
+        window.removeEventListener('message', handleMessage);
+      }
+      const res = await createPaymentLink({
+        locationId,
+        amount,
+        transactionId,
+        orderId,
+        redirectUri: window.location.href,
+        params: {
+          data,
+        },
       });
+
+      if (amount == 0) {
+        window.parent.postMessage(
+          JSON.stringify({ type: 'custom_element_success_response', chargeId: transactionId }),
+          '*',
+        );
+        return;
+      }
+      openIframePayOS(get(res, 'checkoutUrl', ''));
+    } catch (error) {
+      notification.error({
+        message: 'Có lỗi xảy ra khi tạo link thanh toán',
+        description: get(error, 'response.data.message'),
+      });
+      setTimeout(() => {
+        window.parent.postMessage(JSON.stringify({ type: 'custom_element_close_response' }), '*');
+      }, 3000);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // ready to receive payment data
     window.parent.postMessage(JSON.stringify({ type: 'custom_provider_ready', loaded: true }), '*');
 
