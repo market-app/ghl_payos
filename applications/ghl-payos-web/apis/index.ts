@@ -17,8 +17,8 @@ export const updateInfoApp = (payload: string, email: string) => {
       'x-sso-payload': payload,
     },
     data: {
-      email
-    }
+      email,
+    },
   });
 };
 
@@ -45,6 +45,7 @@ export const createPaymentLink = (body: Record<string, any>) => {
   return axiosPayOS()('api/payos/apps/payment-link', {
     method: 'post',
     data: body,
+    timeout: 60000,
   });
 };
 
