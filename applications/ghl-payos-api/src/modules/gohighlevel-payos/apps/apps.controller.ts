@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   UseGuards,
@@ -17,6 +18,7 @@ import { CreatePaymentLinkResponseDTO } from './dto/create-payment-link-response
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { UpdateAppInfoRequestDTO } from './dto/update-app-info-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
+import { WebhookPayosRequestDTO } from './dto/webhook-payos-request.dto';
 
 @Controller('/payos/apps')
 export class GoHighLevelPayOSAppsController {
@@ -101,5 +103,13 @@ export class GoHighLevelPayOSAppsController {
   @Post('verify-payment')
   async verifyPayment(@Body() body: VerifyPaymentRequestDTO): Promise<any> {
     return this.ghlPayOSAppService.verifyPayment(body);
+  }
+
+  @Post('webhook/:locationId')
+  async webhookPayos(
+    @Body() body: WebhookPayosRequestDTO,
+    @Param('locationId') locationId: string,
+  ): Promise<any> {
+    return this.ghlPayOSAppService.webhookPayos(body, locationId);
   }
 }

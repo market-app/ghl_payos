@@ -11,7 +11,7 @@ import {
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { HistoryRequestsEntity } from 'src/shared/entities/payos/histoty-request.entity';
 import { isTokenExpired } from 'src/shared/utils';
-import { ghlApi } from 'src/shared/utils/axios';
+import { ghlApi, ghlBackendApi } from 'src/shared/utils/axios';
 import { Repository } from 'typeorm';
 import { GetAccessTokenResponseDTO } from './dto/get-access-token-response.dto';
 import { GetProviderConfigResponseDTO } from './dto/get-provider-config-response.dto';
@@ -241,6 +241,38 @@ export class GoHighLevelService {
           locationId,
           altId: locationId,
           altType: 'location',
+        },
+      }).then((res) => res.data);
+      return response;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async verifyPayment({
+    locationId,
+    transactionId,
+    orderId,
+    chargeId,
+  }: {
+    orderId: string;
+    chargeId: string;
+    transactionId: string;
+    locationId: string;
+  }): Promise<any> {
+    try {
+      const response = await ghlBackendApi({
+        log: this.historyRequestsRepository,
+        locationId,
+      })('/payments/custom-provider/verify', {
+        method: 'post',
+        headers: {},
+        data: {
+          locationId,
+          orderId,
+          chargeId,
+          transactionId,
+          marketplaceAppId: process.env.MARKET_APP_PAYOS_ID,
         },
       }).then((res) => res.data);
       return response;

@@ -25,6 +25,14 @@ export class OrdersEntity {
   locationId: string;
 
   @Column({
+    name: 'ghl_order_id',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  ghlOrderId: string;
+
+  @Column({
     name: 'amount',
     type: 'integer',
     nullable: false,
