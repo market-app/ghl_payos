@@ -1,6 +1,7 @@
 import { BadRequestException, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PayOS from '@payos/node';
+import { WebhookDataType } from '@payos/node/lib/type';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
 import { get, isEmpty } from 'lodash';
@@ -38,6 +39,7 @@ import { CreatePaymentLinkResponseDTO } from './dto/create-payment-link-response
 import { PaymentGatewayKeyRequestDTO } from './dto/payment-gateway-key-request.dto';
 import { UpdateAppInfoRequestDTO } from './dto/update-app-info-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
+import { WebhookPayosRequestDTO } from './dto/webhook-payos-request.dto';
 
 export class GoHighLevelPayOSAppsService {
   constructor(
@@ -132,6 +134,22 @@ export class GoHighLevelPayOSAppsService {
       latestUpdateToken: app.latestUpdateToken,
       expireIn: app.expiresIn,
     });
+
+    //#region create webhook
+    try {
+      const payOS = new PayOS(
+        clientId,
+        apiKey,
+        checksumKey,
+        process.env.PAYOS_PARTNER_CODE,
+      );
+      const webhookUrl = `${process.env.API_HOST}/api/payos/apps/webhook/${appInfo.activeLocation}`;
+      console.log(webhookUrl);
+      await payOS.confirmWebhook(webhookUrl);
+    } catch (error) {
+      console.error(`🚀 confirm webhook error: ${error}`);
+    }
+    //#endregion
 
     return true;
   }
@@ -270,6 +288,7 @@ export class GoHighLevelPayOSAppsService {
         locationId,
         orderCode,
         description,
+        ghlOrderId: orderIdGhl,
         createdAt: new Date(),
         createdBy: ENUM_CREATED_BY_DEFAULT.SYSTEM,
         status: ENUM_ORDER_STATUS.NEW,
@@ -510,5 +529,66 @@ export class GoHighLevelPayOSAppsService {
       console.log(`:::🚀 ${get(error, 'message', error)}`);
       return ERROR_MESSAGE_DEFAULT;
     }
+  }
+
+  async webhookPayos(
+    body: WebhookPayosRequestDTO,
+    locationId: string,
+  ): Promise<any> {
+    const app = await this.appsRepository.findOne({
+      where: {
+        locationId,
+      },
+    });
+    if (!app) {
+      throw new BadRequestException('App not found');
+    }
+
+    const providerConfig = await this.getPaymentGatewayKeys({
+      activeLocation: app.locationId,
+      userId: app.userId,
+      companyId: app.companyId,
+    });
+    const { apiKey, checksumKey, clientId } = providerConfig;
+    if (!apiKey) {
+      throw new BadRequestException('Không tìm thấy thông tin cổng thanh toán');
+    }
+
+    const payOS = new PayOS(
+      clientId,
+      apiKey,
+      checksumKey,
+      process.env.PAYOS_PARTNER_CODE,
+    );
+    let data: WebhookDataType | null = null;
+    data = payOS.verifyPaymentWebhookData(body as any);
+    if (!data) {
+      return { success: true };
+    }
+
+    try {
+      const order = await this.ordersRepository.findOne({
+        where: {
+          orderCode: body.data.orderCode,
+          locationId,
+          status: ENUM_ORDER_STATUS.NEW,
+        },
+      });
+      if (!order) {
+        throw new BadRequestException('Order not found or paid');
+      }
+      if (order.ghlOrderId) {
+        await this.ghlService.verifyPayment({
+          locationId,
+          transactionId: order.transactionId,
+          chargeId: order.paymentLinkId,
+          orderId: order.ghlOrderId,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    return { success: false };
   }
 }

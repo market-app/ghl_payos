@@ -82,6 +82,22 @@ export const ghlApi = ({
   return instance;
 };
 
+export const ghlBackendApi = ({
+  log,
+  locationId,
+}: {
+  log: Repository<HistoryRequestsEntity>;
+  locationId?: string;
+}): AxiosInstance => {
+  const ghlApiConfig: AxiosRequestConfig = {
+    baseURL: process.env.GHL_BACKEND_HOST,
+    timeout: 60000,
+  };
+
+  const instance = createAxiosInstance(ghlApiConfig, log, locationId);
+  return instance;
+};
+
 export const brevoApi = ({
   log,
   locationId,

@@ -36,9 +36,11 @@ const Checkout = () => {
       const paymentInfo = JSON.parse(data);
 
       const { locationId, amount, transactionId, orderId } = paymentInfo;
-      console.log(paymentInfo)
+      console.log(paymentInfo);
       // check có data của GHL mới remove  listen message
-      if (locationId && amount && orderId) {
+      if (!locationId || !amount) {
+        return;
+      } else {
         window.removeEventListener('message', handleMessage);
       }
       const res = await createPaymentLink({
