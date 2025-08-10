@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 const Checkout = () => {
   const PAYOS_IFRAME_ELEMENT_ID = 'payos_checkout_url';
   const [loading, setLoading] = useState(true);
+  const [receivedMessage, setReceivedMessage] = useState(false);
 
   const openIframePayOS = (checkoutUrl: string) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -41,6 +42,7 @@ const Checkout = () => {
       if (!locationId || !amount) {
         return;
       } else {
+        setReceivedMessage(true)
         window.removeEventListener('message', handleMessage);
       }
       const res = await createPaymentLink({
@@ -77,10 +79,17 @@ const Checkout = () => {
 
   useLayoutEffect(() => {
     // ready to receive payment data
+    console.log('processing postMessage...');
     window.parent.postMessage(JSON.stringify({ type: 'custom_provider_ready', loaded: true }), '*');
-
+    const interval = setInterval(() => {
+      if (!receivedMessage) {
+        window.parent.postMessage(JSON.stringify({ type: 'custom_provider_ready', loaded: true }), '*');
+      }
+    }, 1000); // mỗi 1 giây bắn lại
+    
     window.addEventListener('message', handleMessage);
     return () => {
+      clearInterval(interval);
       window.removeEventListener('message', handleMessage);
     };
   }, []);

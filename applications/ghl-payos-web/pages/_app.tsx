@@ -8,6 +8,7 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import weekday from 'dayjs/plugin/weekday';
 import type { AppProps } from 'next/app';
+// import Script from 'next/script';
 import 'styles/globals.css';
 import { SWRConfig } from 'swr';
 
@@ -30,6 +31,13 @@ function App({ Component, pageProps }: AppProps) {
           revalidateOnFocus: false,
         }}
       >
+        {/* <Script id='ms-clarity' strategy='afterInteractive'>{`
+        (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "qa9r2ro61q");
+      `}</Script> */}
         <Component {...pageProps} />
       </SWRConfig>
     </>
