@@ -233,23 +233,22 @@ export class GoHighLevelPayOSAppsService {
 
       if (isEmpty(activeSubs)) {
         // send mail expire sub
-        const email = app.email;
-        if (!isValidEmail(email)) {
-          throw new BadRequestException(
-            'Không thể gửi mail do không đúng định dạng',
-          );
-        }
-
-        await this.brevoService.sendMailWithTemplate({
-          locationId,
-          email,
-          params: {
-            email,
-            expirationDate: dayjs().format('DD/MM/YYYY'),
-          },
-          templateId: Number(process.env.BREVO_TEMPLATE_ID_EXTEND_SUBSCRIPTION),
-        });
-        throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
+        // const email = app.email;
+        // if (!isValidEmail(email)) {
+        //   throw new BadRequestException(
+        //     'Không thể gửi mail do không đúng định dạng',
+        //   );
+        // }
+        // await this.brevoService.sendMailWithTemplate({
+        //   locationId,
+        //   email,
+        //   params: {
+        //     email,
+        //     expirationDate: dayjs().format('DD/MM/YYYY'),
+        //   },
+        //   templateId: Number(process.env.BREVO_TEMPLATE_ID_EXTEND_SUBSCRIPTION),
+        // });
+        // throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
       }
     } catch (error) {
       console.log(`🚀🚀🚀 ${get(error, 'response.data.message', error)}`);
