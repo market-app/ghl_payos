@@ -4,7 +4,7 @@ import PayOS from '@payos/node';
 import { WebhookDataType } from '@payos/node/lib/type';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
-import { get, isEmpty } from 'lodash';
+import { get, isEmpty, now } from 'lodash';
 import TelegramBot from 'node-telegram-bot-api';
 import { PPayOS_DB } from 'src/config';
 import {
@@ -15,11 +15,13 @@ import {
   ENUM_VERIFY_PAYMENT_TYPE,
   ENUM_WEBHOOK_TYPE,
   ERROR_MESSAGE_DEFAULT,
+  TIMEZONE,
 } from 'src/shared/constants/payos.constant';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
 import { AppsEntity } from 'src/shared/entities/payos/app.entity';
 import { HistoryRequestsEntity } from 'src/shared/entities/payos/histoty-request.entity';
 import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
+import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
 import { GoHighLevelService } from 'src/shared/modules/gohighlevel/gohighlevel.service';
 import { BrevoService } from 'src/shared/services/brevo.service';
@@ -191,6 +193,123 @@ export class GoHighLevelPayOSAppsService {
     );
   }
 
+  async handleAlertSubscriptions({
+    locationId,
+    activeSub,
+    app,
+  }: {
+    locationId: string;
+    activeSub: SubscriptionsEntity;
+    app: AppsEntity;
+  }): Promise<void> {
+    let newExpiredTime;
+    const timeExpiredSubscription = get(app, 'params.timeExpiredSubscription');
+    const expirationDate = dayjs(
+      activeSub ? activeSub.endDate : dayjs().tz(TIMEZONE),
+    ).format('YYYY-MM-DD HH:mm:ss');
+
+    if (timeExpiredSubscription) {
+      const isExpired = dayjs(timeExpiredSubscription)
+        .tz(TIMEZONE)
+        .isSameOrBefore(dayjs());
+      if (isExpired) {
+        // send mail
+        await this.handleSendMail({ app, expirationDate });
+        // set new timeExpired
+        newExpiredTime = dayjs(timeExpiredSubscription)
+          .tz(TIMEZONE)
+          .add(3, 'day');
+      }
+    } else {
+      await this.handleSendMail({ app, expirationDate });
+      newExpiredTime = dayjs().tz(TIMEZONE).add(3, 'day');
+    }
+
+    if (newExpiredTime) {
+      // update timeExpiredSubscription
+      await this.appsRepository
+        .createQueryBuilder()
+        .update()
+        .set({
+          params: () =>
+            `jsonb_set(params, '{timeExpiredSubscription}', '"${dayjs(
+              newExpiredTime,
+            )
+              .tz(TIMEZONE)
+              .format()}"')`,
+        })
+        .where({ id: app.id })
+        .execute();
+
+      try {
+        //noti tele
+        const bot = new TelegramBot(process.env.TELEGRAM_NOTI_BOT_TOKEN || '');
+        const messageTele = `
+${'‼️'} EXPIRED SUBSCRIPTION (${process.env.NODE_ENV})
+
+Email:  ${app.email}\r
+LocationId:  ${app.locationId}\r
+NewExpiredTime: ${newExpiredTime}\r
+🕒 Time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\r
+      `;
+
+        bot.sendMessage(process.env.TELEGRAM_NOTI_CHAT_ID || '', messageTele);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    return;
+  }
+
+  async handleAllowSendAlertSubscriptions({
+    activeSub,
+  }: {
+    activeSub: SubscriptionsEntity;
+  }): Promise<boolean> {
+    if (!activeSub) return true;
+
+    if (activeSub) {
+      const endDate = activeSub.endDate;
+      const dayToExpired = dayjs(endDate).tz(TIMEZONE).diff(dayjs(), 'day');
+      if (dayToExpired <= 7) {
+        // send mail
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async handleSendMail({
+    app,
+    expirationDate,
+  }: {
+    app: AppsEntity;
+    expirationDate: string;
+  }): Promise<void> {
+    try {
+      //send mail expire sub
+      const email = app.email;
+      if (!isValidEmail(email)) {
+        throw new BadRequestException(
+          'Không thể gửi mail do không đúng định dạng',
+        );
+      }
+      await this.brevoService.sendMailWithTemplate({
+        locationId: app.locationId,
+        email,
+        params: {
+          email,
+          expirationDate,
+        },
+        templateId: Number(process.env.BREVO_TEMPLATE_ID_EXTEND_SUBSCRIPTION),
+      });
+    } catch (error) {
+      const parseError = parseErrorToJson(error);
+      console.log(`🚀 ERROR send mail:`, parseError);
+    }
+  }
+
   async createPaymentLink(
     @Body() body: CreatePaymentLinkRequestDTO,
   ): Promise<CreatePaymentLinkResponseDTO> {
@@ -225,34 +344,27 @@ export class GoHighLevelPayOSAppsService {
     }
 
     // check subscription
-    let activeSubs = [];
-    try {
-      activeSubs = await this.subscriptionService.getActiveSubscription({
+    const activeSub =
+      await this.subscriptionService.getCurrentActiveSubscription({
         activeLocation: locationId,
       } as AppInfoDTO);
-
-      if (isEmpty(activeSubs)) {
-        // send mail expire sub
-        // const email = app.email;
-        // if (!isValidEmail(email)) {
-        //   throw new BadRequestException(
-        //     'Không thể gửi mail do không đúng định dạng',
-        //   );
-        // }
-        // await this.brevoService.sendMailWithTemplate({
-        //   locationId,
-        //   email,
-        //   params: {
-        //     email,
-        //     expirationDate: dayjs().format('DD/MM/YYYY'),
-        //   },
-        //   templateId: Number(process.env.BREVO_TEMPLATE_ID_EXTEND_SUBSCRIPTION),
-        // });
-        // throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
+    try {
+      const allowSendMail = await this.handleAllowSendAlertSubscriptions({
+        activeSub,
+      });
+      if (allowSendMail) {
+        await this.handleAlertSubscriptions({
+          locationId: app.locationId,
+          activeSub,
+          app,
+        });
       }
-    } catch (error) {
-      console.log(`🚀🚀🚀 ${get(error, 'response.data.message', error)}`);
-      throw new BadRequestException('Không tìm thấy gói nào đang hoạt động');
+    } catch (error) {}
+
+    if (!activeSub) {
+      throw new BadRequestException(
+        'Thanh toán bị gán đoạn, vui lòng liên hệ quản trị viên để biết thêm thông tin chi tiết',
+      );
     }
 
     const orderCode = dayjs().unix();
@@ -379,7 +491,7 @@ export class GoHighLevelPayOSAppsService {
     const type = get(body, 'type');
     const locationId = get(body, 'locationId');
     const appId = get(body, 'appId');
-    const payosAppId = process.env.PAYOS_APP_ID || '';
+    const payosAppId = process.env.MARKET_APP_PAYOS_ID || '';
     if (appId !== payosAppId) {
       throw new BadRequestException('AppId not found');
     }

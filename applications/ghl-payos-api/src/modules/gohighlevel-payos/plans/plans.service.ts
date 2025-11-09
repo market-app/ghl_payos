@@ -16,10 +16,14 @@ import { OrdersEntity } from 'src/shared/entities/payos/order.entity';
 import { PlansEntity } from 'src/shared/entities/payos/plan.entity';
 import { SubscriptionsEntity } from 'src/shared/entities/payos/subscription.entity';
 import { WebhookLogsEntity } from 'src/shared/entities/payos/webhook-log.entity';
+import { BrevoService } from 'src/shared/services/brevo.service';
+import { isValidEmail } from 'src/shared/utils';
+import { parseErrorToJson } from 'src/shared/utils/handle-error';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
 import { BuyPlanRequestDTO } from './dto/buy-plan-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
+import TelegramBot from 'node-telegram-bot-api';
 
 export class GoHighLevelPayOSPlansService {
   constructor(
@@ -37,6 +41,8 @@ export class GoHighLevelPayOSPlansService {
 
     @InjectRepository(SubscriptionsEntity, PPayOS_DB)
     private subscriptionsRepository: Repository<SubscriptionsEntity>,
+
+    private brevoService: BrevoService,
   ) {}
 
   async verifyPayment(@Body() body: VerifyPaymentRequestDTO): Promise<any> {
@@ -170,37 +176,77 @@ export class GoHighLevelPayOSPlansService {
     if (!plan.amount) {
       throw new BadRequestException('Bạn không thể mua gói này');
     }
-    const payOS = new PayOS(
-      process.env.PAYOS_SUBSCRIPTION_CLIENT_ID || '',
-      process.env.PAYOS_SUBSCRIPTION_API_KEY || '',
-      process.env.PAYOS_SUBSCRIPTION_CHECKSUM_KEY || '',
-      process.env.PAYOS_PARTNER_CODE,
-    );
-    const paymentLink = await payOS.createPaymentLink({
-      orderCode: dayjs().unix(),
-      amount: plan.amount,
-      description: `Thanh toan goi ${plan.name}`,
-      cancelUrl: body.redirectUri,
-      returnUrl: body.redirectUri,
-    });
 
-    await this.ordersRepository.save({
-      amount: plan.amount,
-      transactionId: dayjs().unix().toString(),
-      locationId: appInfo.activeLocation,
-      orderCode: paymentLink.orderCode,
-      checkoutUrl: paymentLink.checkoutUrl,
-      paymentLinkId: paymentLink.paymentLinkId,
-      description: paymentLink.description,
-      createdAt: new Date(),
-      createdBy: ENUM_CREATED_BY_DEFAULT.SYSTEM,
-      status: ENUM_ORDER_STATUS.NEW,
-      params: {
-        planId: plan.id,
-      },
-    });
+    let errorData;
+    try {
+      const email = app.email;
+      if (!isValidEmail(email)) {
+        throw new BadRequestException(
+          'Không thể gửi mail do không đúng định dạng, vui lòng lưu lại mail của bạn.',
+        );
+      }
+      const description = `PLAN%${app.locationId}`;
+      await this.brevoService.sendMailWithTemplate({
+        locationId: app.locationId,
+        email,
+        params: {
+          email,
+          locationId: app.locationId,
+          amount: plan.amount,
+          description,
+          qrCode: `https://img.vietqr.io/image/ocb-0867600311-compact.jpg?amount=${plan.amount}&addInfo=${description}`,
+        },
+        templateId: Number(process.env.BREVO_TEMPLATE_ID_BUY_PLAN),
+      });
+      await this.ordersRepository.save({
+        amount: plan.amount,
+        transactionId: dayjs().unix().toString(),
+        locationId: appInfo.activeLocation,
+        orderCode: dayjs().unix(),
+        checkoutUrl: '',
+        paymentLinkId: '',
+        description,
+        createdAt: new Date(),
+        createdBy: ENUM_CREATED_BY_DEFAULT.SYSTEM,
+        status: ENUM_ORDER_STATUS.NEW,
+        params: {
+          planId: plan.id,
+        },
+      } as any);
+    } catch (error) {
+      const parseError = parseErrorToJson(error);
+      errorData = parseError;
+      console.log(`🆘 ERROR buy plan:`, parseError);
+    }
+
+    // noti tele
+    try {
+      const bot = new TelegramBot(process.env.TELEGRAM_NOTI_BOT_TOKEN || '');
+      const messageTele = `
+${errorData ? '🆘' : '✅'} BUY PLAN (${process.env.NODE_ENV})
+
+Email:  ${app.email}\r
+LocationId:  ${app.locationId}\r
+Plan: ${plan.id} - ${plan.name}\r
+Amount: ${plan.amount}\r
+🕒 Time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\r
+
+*Error : ${errorData && JSON.stringify(errorData)}
+      `;
+
+      bot.sendMessage(process.env.TELEGRAM_NOTI_CHAT_ID || '', messageTele);
+    } catch (error) {
+      const parseError = parseErrorToJson(error);
+      console.log(`🆘 NOTI telegram fail:`, parseError);
+    }
+
+    if (errorData) {
+      throw new BadRequestException(
+        'Có lỗi xảy ra khi mua gói. Vui lòng liên hệ quản trị viên hoặc qua zalo để giải đáp',
+      );
+    }
     return {
-      checkoutUrl: paymentLink.checkoutUrl,
+      email: app.email,
     };
   }
 

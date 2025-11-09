@@ -26,4 +26,20 @@ export class GoHighLevelPayOSSubscriptionsService {
 
     return activeSubs.map((sub) => pick(sub, ['endDate', 'startDate', 'plan']));
   }
+
+  async getCurrentActiveSubscription(
+    @RequestAppInfo() appInfo: AppInfoDTO,
+  ): Promise<any> {
+    const activeSub = await this.subscriptionsRepository
+      .createQueryBuilder('sub')
+      .leftJoinAndSelect('sub.plan', 'plan')
+      .andWhere({
+        locationId: appInfo.activeLocation,
+      })
+      .andWhere('sub.end_date >= NOW()')
+      .andWhere('sub.start_date <= NOW()')
+      .getOne();
+
+    return activeSub;
+  }
 }

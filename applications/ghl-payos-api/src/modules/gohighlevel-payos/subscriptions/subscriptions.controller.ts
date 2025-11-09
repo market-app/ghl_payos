@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
 import { DecryptPayloadSSOKeyGuard } from 'src/shared/guards/DecryptPayloadSSOKey.guard';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
