@@ -62,6 +62,7 @@ export class GoHighLevelPayOSAuthenticationService {
         latestUpdateToken: new Date(),
         createdBy: 'system',
         state: ENUM_PAYOS_APP_STATE.INSTALLED,
+        params: {},
       });
 
       // create new integration

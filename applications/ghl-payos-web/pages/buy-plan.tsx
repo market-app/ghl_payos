@@ -18,10 +18,10 @@ const ProcessBuyPlan = () => {
     setLoading(true);
     buyPlanByLocation(payload, planSelected)
       .then((res) => {
-        const newWindow = window.open(get(res, 'checkoutUrl', ''), '_blank');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          notification.warning({
-            message: 'Trình duyệt của bạn đang chặn mở tab mới, vui lòng kích hoạt tính năng để tiếp tục mua gói',
+        const email = get(res, 'email');
+        if (email) {
+          notification.success({
+            message: `Vui lòng kiểm tra mail ${email} của bạn và hoàn tất thanh toán gói. Nếu không nhận được mail, vui lòng liên hệ quản trị viên.`,
           });
         }
       })
