@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AppInfoDTO {
   @IsString()
@@ -27,4 +27,8 @@ export class AppInfoDTO {
   @IsString()
   @IsOptional()
   email?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  allInfo?: boolean;
 }
