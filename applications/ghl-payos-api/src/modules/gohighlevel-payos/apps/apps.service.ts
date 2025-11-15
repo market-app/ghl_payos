@@ -4,7 +4,7 @@ import PayOS from '@payos/node';
 import { WebhookDataType } from '@payos/node/lib/type';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
-import { get, isEmpty, now } from 'lodash';
+import { get } from 'lodash';
 import TelegramBot from 'node-telegram-bot-api';
 import { PPayOS_DB } from 'src/config';
 import {
@@ -69,12 +69,17 @@ export class GoHighLevelPayOSAppsService {
       where: {
         locationId: appInfo.activeLocation,
         companyId: appInfo.companyId,
-        userId: appInfo.userId,
+        // userId: appInfo.userId,
       },
     });
     if (!app) {
       throw new BadRequestException('Không tìm thấy app');
     }
+
+    if (appInfo.allInfo) {
+      return app;
+    }
+
     return {
       id: app.id,
       email: app.email,
@@ -103,12 +108,11 @@ export class GoHighLevelPayOSAppsService {
   ): Promise<any> {
     const { apiKey, clientId, checksumKey } = body;
 
-    const app = await this.appsRepository.findOne({
-      where: {
-        locationId: appInfo.activeLocation,
-        companyId: appInfo.companyId,
-        userId: appInfo.userId,
-      },
+    const app = await this.getAppInfo({
+      activeLocation: appInfo.activeLocation,
+      companyId: appInfo.companyId,
+      userId: appInfo.userId,
+      allInfo: true,
     });
     if (!app) {
       throw new BadRequestException('Không tìm thấy app');
@@ -159,12 +163,11 @@ export class GoHighLevelPayOSAppsService {
   async getPaymentGatewayKeys(
     @RequestAppInfo() appInfo: AppInfoDTO,
   ): Promise<PaymentGatewayKeyRequestDTO> {
-    const app = await this.appsRepository.findOne({
-      where: {
-        locationId: appInfo.activeLocation,
-        companyId: appInfo.companyId,
-        userId: appInfo.userId,
-      },
+    const app = await this.getAppInfo({
+      activeLocation: appInfo.activeLocation,
+      companyId: appInfo.companyId,
+      userId: appInfo.userId,
+      allInfo: true,
     });
     if (!app) {
       throw new BadRequestException('Không tìm thấy app');
@@ -249,8 +252,10 @@ ${'‼️'} EXPIRED SUBSCRIPTION (${process.env.NODE_ENV})
 
 Email:  ${app.email}\r
 LocationId:  ${app.locationId}\r
+
+‼️ ExpiredTime: ${expirationDate}\r
+
 NewExpiredTime: ${newExpiredTime}\r
-🕒 Time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\r
       `;
 
         bot.sendMessage(process.env.TELEGRAM_NOTI_CHAT_ID || '', messageTele);

@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import PayOS from '@payos/node';
 import dayjs from 'dayjs';
 import { get } from 'lodash';
+import TelegramBot from 'node-telegram-bot-api';
 import { PPayOS_DB } from 'src/config';
 import {
   ENUM_CREATED_BY_DEFAULT,
   ENUM_ORDER_STATUS,
-  ENUM_PLAN_DURATION_TYPE,
   TIMEZONE,
 } from 'src/shared/constants/payos.constant';
 import { RequestAppInfo } from 'src/shared/decorators/request-app-info.decorator';
@@ -20,10 +20,10 @@ import { BrevoService } from 'src/shared/services/brevo.service';
 import { isValidEmail } from 'src/shared/utils';
 import { parseErrorToJson } from 'src/shared/utils/handle-error';
 import { MoreThanOrEqual, Repository } from 'typeorm';
+import { GoHighLevelPayOSAppsService } from '../apps/apps.service';
 import { AppInfoDTO } from '../apps/dto/app-info.dto';
 import { BuyPlanRequestDTO } from './dto/buy-plan-request.dto';
 import { VerifyPaymentRequestDTO } from './dto/verify-payment-request.dto';
-import TelegramBot from 'node-telegram-bot-api';
 
 export class GoHighLevelPayOSPlansService {
   constructor(
@@ -43,6 +43,7 @@ export class GoHighLevelPayOSPlansService {
     private subscriptionsRepository: Repository<SubscriptionsEntity>,
 
     private brevoService: BrevoService,
+    private appService: GoHighLevelPayOSAppsService,
   ) {}
 
   async verifyPayment(@Body() body: VerifyPaymentRequestDTO): Promise<any> {
@@ -155,12 +156,11 @@ export class GoHighLevelPayOSPlansService {
     @RequestAppInfo() appInfo: AppInfoDTO,
     @Body() body: BuyPlanRequestDTO,
   ): Promise<any> {
-    const app = await this.appsRepository.findOne({
-      where: {
-        locationId: appInfo.activeLocation,
-        companyId: appInfo.companyId,
-        userId: appInfo.userId,
-      },
+    const app = await this.appService.getAppInfo({
+      activeLocation: appInfo.activeLocation,
+      companyId: appInfo.companyId,
+      userId: appInfo.userId,
+      allInfo: true,
     });
     if (!app) {
       throw new BadRequestException('Không tìm thấy app');
