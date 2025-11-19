@@ -2,7 +2,7 @@ name: prod-payos-gohighlevel
 on:
   push:
     branches:
-      - main
+      - test
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
           node-version: "20"
 
       - name: install deps
-        run: npm install
+        run: cd applications/ghl-payos-api
 
       - name: build
         run: npm run build
