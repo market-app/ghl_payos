@@ -19,9 +19,10 @@ jobs:
         with:
           node-version: "16"
 
-      - run: cd applications/ghl-payos-api
-      - run: yarn install
-      - run: yarn build
+      - run: |
+            cd applications/ghl-payos-api
+            yarn install
+            yarn build
 
       - name: Zip build
         run: zip -r build.zip dist package.json package-lock.json
