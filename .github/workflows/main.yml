@@ -25,11 +25,6 @@ jobs:
       - name: Zip build
         run: zip -r build.zip dist package.json package-lock.json
 
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - name: Copy file via SSH
         uses: appleboy/scp-action@v1
         with:
@@ -38,4 +33,5 @@ jobs:
           key: ${{ secrets.AWS_KEY }}
           source: "build.zip"
           target: /var/www/ghl_payos/applications
+
         
