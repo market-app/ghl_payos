@@ -16,11 +16,9 @@ jobs:
         with:
           node-version: "20"
 
-      - name: install deps
+      - name: move to app
         run: cd applications/ghl-payos-api
 
       - name: build
-        run: rm -rf node_modules
-        run: yarn install
-        run: yarn run build
+        run: yarn ci && yarn run build
         
