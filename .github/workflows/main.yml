@@ -18,7 +18,7 @@ jobs:
 
       - run: cd applications/ghl-payos-api
       - run: yarn install
-      - run: yarn run build
+      - run: yarn build
 
       - name: Zip build
         run: zip -r build.zip dist package.json package-lock.json
