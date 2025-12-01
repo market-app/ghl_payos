@@ -150,10 +150,13 @@ export class GoHighLevelPayOSAppsService {
         process.env.PAYOS_PARTNER_CODE,
       );
       const webhookUrl = `${process.env.API_HOST}/api/payos/apps/webhook/${appInfo.activeLocation}`;
-      console.log(webhookUrl);
+      console.warn(
+        `🚀 confirm webhook with locationId(${appInfo.activeLocation})`,
+        webhookUrl,
+      );
       await payOS.confirmWebhook(webhookUrl);
     } catch (error) {
-      console.error(`🚀 confirm webhook error: ${error}`);
+      console.error(`🚀 confirm webhook error:`, error);
     }
     //#endregion
 
@@ -260,7 +263,7 @@ NewExpiredTime: ${newExpiredTime}\r
 
         bot.sendMessage(process.env.TELEGRAM_NOTI_CHAT_ID || '', messageTele);
       } catch (error) {
-        console.log(error);
+        console.error(`🆘 send tele alert subscription failed`, error);
       }
     }
 
@@ -311,7 +314,7 @@ NewExpiredTime: ${newExpiredTime}\r
       });
     } catch (error) {
       const parseError = parseErrorToJson(error);
-      console.log(`🚀 ERROR send mail:`, parseError);
+      console.error(`🚀 ERROR send mail:`, parseError);
     }
   }
 
@@ -393,7 +396,7 @@ NewExpiredTime: ${newExpiredTime}\r
         description = productName;
       }
     } catch (error) {
-      console.log(parseErrorToJson(error));
+      console.error(parseErrorToJson(error));
     }
 
     let orderId;
@@ -521,7 +524,7 @@ NewExpiredTime: ${newExpiredTime}\r
       },
     });
     if (!app) {
-      console.log(`:::🚀 App not found`);
+      console.error(`:::🚀 App not found`);
       throw new BadRequestException('App not found');
     }
 
@@ -579,6 +582,22 @@ NewExpiredTime: ${newExpiredTime}\r
       if (!order) {
         throw new BadRequestException('order not found');
       }
+      // save location
+      try {
+        await this.webhookLogsRepository.update(
+          {
+            id: webhookLog.id,
+          },
+          {
+            locationId: order.locationId,
+            updatedAt: new Date(),
+            updatedBy: 'system',
+          },
+        );
+      } catch (error) {
+        console.error(`‼️ update locationId for order`, error);
+      }
+
       if (order.amount == 0) {
         await this.ordersRepository.update(
           {
@@ -638,12 +657,12 @@ NewExpiredTime: ${newExpiredTime}\r
           JSON.stringify(body),
         );
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
 
       return ERROR_MESSAGE_DEFAULT;
     } catch (error) {
-      console.log(`:::🚀 ${get(error, 'message', error)}`);
+      console.error(`:::🚀 ${get(error, 'message', error)}`);
       return ERROR_MESSAGE_DEFAULT;
     }
   }
@@ -703,7 +722,7 @@ NewExpiredTime: ${newExpiredTime}\r
         });
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     return { success: false };
