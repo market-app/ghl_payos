@@ -12,7 +12,7 @@ export const isTokenExpired = (createdAt: Date, expireIn: number): boolean => {
   console.log(expireTime.format(), now.format());
 
   const isExpired = now.isAfter(expireTime);
-  console.log(`🚀🚀🚀 EXPIRED TIME processing: ${isExpired}`);
+  console.warn(`🚀🚀🚀 EXPIRED TIME processing: ${isExpired}`);
 
   // So sánh
   return isExpired;
