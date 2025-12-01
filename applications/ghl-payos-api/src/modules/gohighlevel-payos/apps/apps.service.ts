@@ -630,6 +630,7 @@ NewExpiredTime: ${newExpiredTime}\r
        * các đơn đã hiện thanh toán thành công trên UI nhưng gọi api status thì không đúng
        * alert telegram để note các đơn này
        */
+      console.error(`‼️ ERROR order status chargeId(${chargeId})`, paymentInfo);
       try {
         const bot = new TelegramBot(process.env.TELEGRAM_NOTI_BOT_TOKEN || '');
         bot.sendMessage(
