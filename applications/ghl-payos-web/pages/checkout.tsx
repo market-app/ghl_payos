@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 const Checkout = () => {
   const PAYOS_IFRAME_ELEMENT_ID = 'payos_checkout_url';
   const [loading, setLoading] = useState(true);
+  const [intervalId, setIntervalId] = useState<any>(null);
 
   const openIframePayOS = (checkoutUrl: string) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -41,6 +42,8 @@ const Checkout = () => {
       if (!locationId || !amount) {
         return;
       } else {
+        if (intervalId) clearInterval(intervalId);
+
         window.removeEventListener('message', handleMessage);
       }
       const res = await createPaymentLink({
@@ -75,15 +78,33 @@ const Checkout = () => {
     }
   };
 
-  useLayoutEffect(() => {
-    // ready to receive payment data
-    window.parent.postMessage(JSON.stringify({ type: 'custom_provider_ready', loaded: true }), '*');
-
+  useEffect(() => {
+    // 2. Start Listening immediately
     window.addEventListener('message', handleMessage);
+
+    // 3. Start the Loop: Post message every 1000ms (1 second)
+    const newId = setInterval(() => {
+      window.parent.postMessage(JSON.stringify({ type: 'custom_provider_ready', loaded: true }), '*');
+    }, 1000);
+    setIntervalId(newId);
+
+    // 4. Cleanup function
+    // This runs if the component unmounts BEFORE you receive data
     return () => {
+      if (intervalId) clearInterval(intervalId);
       window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  // useEffect(() => {
+  //   // ready to receive payment data
+  //   window.parent.postMessage(JSON.stringify({ type: 'custom_provider_ready', loaded: true }), '*');
+
+  //   window.addEventListener('message', handleMessage);
+  //   return () => {
+  //     window.removeEventListener('message', handleMessage);
+  //   };
+  // }, []);
 
   return (
     <div className='bg-transparent'>
