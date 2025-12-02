@@ -576,7 +576,6 @@ NewExpiredTime: ${newExpiredTime}\r
       const order = await this.ordersRepository.findOne({
         where: {
           paymentLinkId: chargeId,
-          status: ENUM_ORDER_STATUS.NEW,
         },
       });
       if (!order) {
@@ -596,6 +595,11 @@ NewExpiredTime: ${newExpiredTime}\r
         );
       } catch (error) {
         console.error(`‼️ update locationId for order`, error);
+      }
+
+      // phòng trường hợp GHL bắn dup 2 lần
+      if (order.status === ENUM_ORDER_STATUS.PAID) {
+        return { success: true };
       }
 
       if (order.amount == 0) {
