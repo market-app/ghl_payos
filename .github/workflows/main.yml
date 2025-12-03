@@ -43,6 +43,7 @@ jobs:
           script: |
             cd /var/www/ghl_payos/applications/test
             unzip -o build.zip
+            cd /applications/ghl-payos-api
             yarn install --production
 
 
