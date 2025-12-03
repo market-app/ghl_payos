@@ -34,6 +34,18 @@ jobs:
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_KEY }}
           source: "build.zip"
-          target: /var/www/ghl_payos/applications
+          target: /var/www/ghl_payos/applications/test
+
+      - name: Deploy
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_KEY }}
+          script: |
+            cd /var/www/ghl_payos/applications/test
+            unzip -o build.zip
+            yarn install --production
+
 
         
