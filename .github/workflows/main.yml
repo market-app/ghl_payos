@@ -24,6 +24,7 @@ jobs:
             yarn install
             yarn build
             zip -r build.zip dist package.json package-lock.json
+            ls -la
 
       - name: Copy file via SSH
         uses: appleboy/scp-action@v1
@@ -31,7 +32,7 @@ jobs:
           host: ${{ secrets.AWS_HOST }}
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_KEY }}
-          source: "applications/ghl-payos-api/build.zip"
+          source: "./applications/ghl-payos-api/build.zip"
           target: "/var/www/ghl_payos/applications/test"
 
       # - name: Deploy
