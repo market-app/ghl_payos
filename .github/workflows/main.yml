@@ -32,7 +32,7 @@ jobs:
           host: ${{ secrets.AWS_HOST }}
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_KEY }}
-          source: "./applications/ghl-payos-api/build.zip"
+          source: "build.zip"
           target: "/var/www/ghl_payos/applications/test"
 
       # - name: Deploy
