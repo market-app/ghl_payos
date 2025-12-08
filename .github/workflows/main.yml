@@ -44,8 +44,7 @@ jobs:
           key: ${{ secrets.AWS_KEY }}
           script: |
             cd /var/www/ghl_payos/applications/test/ghl-payos-api
-            yarn i
-            yarn build
+            unzip -o build.zip
 
 
         
