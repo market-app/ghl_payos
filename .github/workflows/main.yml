@@ -35,7 +35,6 @@ jobs:
           key: ${{ secrets.AWS_KEY }}
           source: "build.zip"
           target: "/var/www/ghl_payos/applications/test/ghl-payos-api"
-          # strip_components: 2
 
       - name: Deploy
         uses: appleboy/ssh-action@v1
@@ -47,7 +46,7 @@ jobs:
             cd /var/www/ghl_payos/applications/test/ghl-payos-api
             unzip -o build.zip
             ls -la
-            
+
 
 
         
