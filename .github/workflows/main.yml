@@ -47,6 +47,7 @@ jobs:
             cd /var/www/ghl_payos/applications/test/ghl-payos-api
             unzip -o build.zip
             ls -la
+            
 
 
         
