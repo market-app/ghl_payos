@@ -36,16 +36,16 @@ jobs:
           target: "/var/www/ghl_payos/applications/test"
           strip_components: 2
 
-      # - name: Deploy
-      #   uses: appleboy/scp-action@v1
-      #   with:
-      #     host: ${{ secrets.AWS_HOST }}
-      #     username: ${{ secrets.AWS_USERNAME }}
-      #     key: ${{ secrets.AWS_KEY }}
-      #     script: |
-      #       cd /var/www/ghl_payos/applications/test
-      #       unzip -o build.zip
-      #       yarn i
+      - name: Deploy
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_KEY }}
+          script: |
+            cd /var/www/ghl_payos/applications/test/ghl-payos-api
+            yarn i
+            yarn build
 
 
         
